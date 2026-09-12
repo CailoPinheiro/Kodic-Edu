@@ -1,0 +1,24 @@
+{
+  "name": "kodicedu",
+  "version": "2.0.0",
+  "description": "Kodic Edu - Fullstack Learning Ecosystem (React + Express + SQLite + JWT)",
+  "scripts": {
+    "server": "cd server && npm start",
+    "client": "cd client && npm run dev",
+    "build:client": "cd client && npm run build",
+    "test:server": "cd server && npm test",
+    "test": "cd server && npm test",
+    "start": "NODE_ENV=production cd server && npm start"
+  },
+  "keywords": [
+    "kodic",
+    "edu",
+    "react",
+    "express",
+    "sqlite",
+    "jwt",
+    "bncc"
+  ],
+  "author": "Kodic Edu Team",
+  "license": "ISC"
+}

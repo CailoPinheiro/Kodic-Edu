@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kodic Edu — O Celular como Ferramenta de Engajamento Coletivo</title>
+  
+  <!-- Google Fonts & Lucide Icons CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons Script -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Kodic Edu Design System CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Control Bar / Mode Switcher -->
+  <header class="control-bar">
+    <div class="brand-logo">
+      <i data-lucide="zap" style="color: var(--kodic-fuchsia);"></i>
+      <span>Kodic<span style="color: var(--kodic-fuchsia);">Edu</span></span>
+      <span class="brand-badge">Interface Limpa</span>
+    </div>
+
+    <!-- Mode Switcher -->
+    <div class="mode-switcher">
+      <button class="mode-btn active" data-mode="student">
+        <i data-lucide="user"></i> <span>Visão Aluno</span>
+      </button>
+      <button class="mode-btn" data-mode="shared">
+        <i data-lucide="smartphone"></i> <span>Modo Compartilhado (4 em 1)</span>
+      </button>
+      <button class="mode-btn" data-mode="teacher">
+        <i data-lucide="graduation-cap"></i> <span>Painel Professor & IA</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Device Frame Container -->
+  <main class="device-wrapper">
+    <div class="phone-container">
+      
+      <!-- Toast Notification Container -->
+      <div id="toast-container" class="toast-container"></div>
+
+      <!-- App Header inside Phone -->
+      <div class="app-header">
+        <div class="header-brand">
+          <button class="icon-btn" onclick="KodicApp.toggleDrawer(true)" title="Menu Lateral">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="brand-name">Kodic<span>Edu</span></div>
+        </div>
+
+        <div class="header-actions">
+          <button class="icon-btn" onclick="KodicApp.toggleTheme()" title="Alternar Modo Claro/Escuro">
+            <i data-lucide="sun" id="theme-icon-sun" style="color: var(--kodic-amber);"></i>
+            <i data-lucide="moon" id="theme-icon-moon" style="display: none; color: var(--kodic-purple);"></i>
+          </button>
+          <button class="icon-btn" onclick="KodicApp.switchTab('impacto')" title="Notificações de Impacto">
+            <i data-lucide="bell"></i>
+            <div class="notification-ping"></div>
+            <div class="notification-dot"></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Side Drawer (Barra Lateral) & Overlay -->
+      <div id="drawer-overlay" class="drawer-overlay" onclick="KodicApp.toggleDrawer(false)"></div>
+      <aside id="side-drawer" class="side-drawer">
+        <div id="side-drawer-content"></div>
+      </aside>
+
+      <!-- Main Scrollable Screen Content -->
+      <div class="screen-content" id="screen-container">
+        <!-- Dynamic Views Injected via JavaScript -->
+      </div>
+
+      <!-- Bottom Mobile App Navigation Bar -->
+      <nav class="app-nav">
+        <button class="nav-item active" data-tab="inicio">
+          <i data-lucide="home"></i>
+          <span>Início</span>
+        </button>
+        <button class="nav-item" data-tab="grupo">
+          <i data-lucide="users"></i>
+          <span>Grupo</span>
+        </button>
+        <button class="nav-item" data-tab="missoes">
+          <i data-lucide="gamepad-2"></i>
+          <span>Missões</span>
+        </button>
+        <button class="nav-item" data-tab="impacto">
+          <i data-lucide="heart"></i>
+          <span>Impacto</span>
+        </button>
+      </nav>
+
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "kodic-edu-server",
+  "version": "2.0.0",
+  "description": "Kodic Edu Backend - Express, SQLite, JWT, RBAC",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node test/api.test.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "keywords": ["kodic", "edu", "sqlite", "express", "jwt"],
+  "author": "Kodic Edu Team",
+  "license": "ISC"
+}

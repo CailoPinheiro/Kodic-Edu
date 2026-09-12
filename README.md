@@ -50,6 +50,10 @@ Escola
 
 - [`docs/plano de ação.md`](docs/plano%20de%20ação.md): Especificação completa do conceito pedagógico, personas, dinâmicas de sala e funcionalidades do Kodic Edu.
 - [`docs/limitacoes.md`](docs/limitacoes.md): Análise detalhada das limitações técnicas, operacionais, regulatórias (LGPD) e delimitação de escopo entre MVP e Produção.
+- **Planos de Implementação (Hackathon):**
+  - [`docs/planos/divisao-responsabilidades-hackathon.md`](docs/planos/divisao-responsabilidades-hackathon.md): Divisão de papéis para 4 pessoas em 4 Milestones sequenciais e arquitetura de testes com *Persona Switcher*.
+  - [`docs/planos/contratos-api.md`](docs/planos/contratos-api.md): Especificação dos contratos da API REST mockada para desenvolvimento desacoplado.
+  - [`docs/planos/roteiro-demonstracao.md`](docs/planos/roteiro-demonstracao.md): Roteiro de testes interativos e fluxo guiado para avaliação das interações entre alunos.
 - [`AGENTS.md`](AGENTS.md): Diretrizes de contexto e instruções para agentes de desenvolvimento de IA neste repositório.
 
 ---

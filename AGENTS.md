@@ -5,6 +5,7 @@
 - **Especificações de Produto:**
   - `docs/plano de ação.md`: Documento conceitual completo do Kodic Edu (gamificação cooperativa escolar, modo compartilhado, papéis, moderação descentralizada e BNCC).
   - `docs/limitacoes.md`: Mapeamento de limitações técnicas, regulatórias (LGPD) e delimitação de escopo (MVP vs. Produção).
+  - `docs/planos/`: Pasta contendo a divisão de responsabilidades em Milestones para 4 devs, contratos de rotas REST e roteiro de demonstração interativa.
   - `README.md`: Visão geral da proposta, arquitetura de domínio e roadmap.
 
 ## 💻 Stack Tecnológica (MVP)

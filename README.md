@@ -1,27 +1,28 @@
-# Kodic Edu — O Celular como Ferramenta de Engajamento Coletivo
+# Kodic Edu — Ecossistema Fullstack Unificado (Next.js + Tailwind + shadcn/ui)
 
-O **Kodic Edu** é uma plataforma educacional gamificada desenhada para transformar o smartphone na sala de aula em um motor de colaboração e inclusão social.
+O **Kodic Edu** é uma plataforma educacional gamificada projetada para transformar o smartphone na sala de aula em um motor de colaboração inclusiva e aprendizagem ativa, eliminando a dependência do modelo 1:1 (um celular por aluno) e reduzindo a sobrecarga docente com IA ancorada na BNCC oficial.
 
-A aplicação conta com arquitetura Fullstack moderna:
-- **Frontend:** React 18 + Vite + Lucide Icons (Design System com Dark/Light theme e glassmorphism).
-- **Backend:** Express (Node.js) + SQLite (`better-sqlite3`, síncrono e ultra-rápido em arquivo local).
-- **Autenticação:** JWT com controle de acesso baseado em papéis (RBAC) para **Professor** e **Aluno**.
+A aplicação adota uma arquitetura Fullstack moderna e unificada em **Next.js 14**:
+- **Front-end:** Next.js (App Router) + Tailwind CSS + shadcn/ui + Lucide Icons (Design System Glassmorphism com suporte a Dark/Light Theme).
+- **Back-end:** Next.js Route Handlers (`/api/*`) com execução de alta performance no mesmo processo.
+- **Banco de Dados:** SQLite relacional local (`better-sqlite3`) com modo WAL (Write-Ahead Logging), chaves estrangeiras e integridade referencial.
+- **Autenticação & Segurança:** JWT assinado com controle de acesso baseado em papéis (RBAC para **Professor** e **Aluno**) e conformidade nativa com a LGPD (Privacy by Design).
 
 ---
 
 ## Principais Funcionalidades
 
-1. **Modo Compartilhado (4 em 1):** Um único celular conecta simultaneamente de 2 a 4 alunos.
-2. **Sincronização Justa de Pontos:** Ao acertar um quiz no aparelho compartilhado, os pontos são distribuídos igualmente para os 4 alunos da equipe e creditados na Meta Coletiva da Turma.
-3. **Rodízio de Posse de Aparelho:** Alternância sugerida pelo aplicativo para evitar a monopolização do dispositivo.
-4. **Múltiplas Inteligências:** Alunos escolhem perfis sem exposição forçada (**Curadores**, **Revisores**, **Comunicadores**).
-5. **Resolução Híbrida:** Envio de fotos de cadernos manuscritos e mapas mentais feitos no papel.
-6. **Impacto Silencioso (Gratidão Privada):** Eliminação de likes e métricas de vaidade em favor de notificações privadas de utilidade coletiva.
-7. **Assistente Docente BNCC Oficial:** Geração e publicação de quizzes sem risco de alucinação, ancorados na API `bncc.dev` (MEC).
-8. **Heatmap Pedagógico:** Learning Analytics por competência da BNCC sem monitoramento invasivo de telas.
-9. **Moderação em Camadas:** Filtro de segurança de IA somado à validação por Líderes de Turma e docentes.
-10. **Modo Foco & Pomodoro:** Timer de 25 minutos integrado para estudos sem distração.
-11. **Privacy by Design & LGPD:** Proteção de dados de menores, ambiente escolar fechado e zero publicidade.
+1. **Modo Compartilhado (4 em 1):** 1 único smartphone sincroniza e atende um grupo de até 4 estudantes.
+2. **Sincronização Justa de Pontos (Fair Sync):** Respostas certas no aparelho distribuem pontos igualmente para todos os membros e creditam a Meta Coletiva da Turma.
+3. **Rodízio de Aparelho:** Alternância sugerida em tempo real para evitar monopólio do dispositivo.
+4. **Múltiplas Inteligências:** Alunos escolhem papéis colaborativos sem exposição forçada (**Curadores**, **Revisores**, **Comunicadores**).
+5. **Resolução Híbrida (Caderno Físico):** Envio e catalogação de fotos de resoluções manuscritas e mapas mentais feitos no papel.
+6. **Impacto Silencioso (Gratidão Privada):** Eliminação de likes públicos, seguidores e disputa de atenção em favor de notificações privadas de utilidade coletiva.
+7. **Assistente Docente BNCC Oficial:** Geração instantânea de quizzes com 0% de risco de alucinação, ancorados no catálogo oficial da BNCC (`bncc.dev` / MEC).
+8. **Learning Analytics Heatmap:** Mapa de calor pedagógico por competência curricular sem monitoramento invasivo de telas.
+9. **Fila de Moderação em Camadas:** Filtro de segurança por IA somado à validação distribuída por Líderes de Turma e docentes.
+10. **Modo Foco & Pomodoro:** Temporizador de 25 minutos com silenciamento de notificações para atenção total.
+11. **Onboarding Progressivo do Docente:** Nível 1 (Quizzes rápidos), Nível 2 (Líderes de Turma) e Nível 3 (Sala de Aula Invertida).
 
 ---
 
@@ -32,84 +33,69 @@ A aplicação conta com arquitetura Fullstack moderna:
 
 ---
 
-## Instalação
+## Instalação Rápida
 
-Clone o repositório e instale as dependências do servidor e do cliente:
+Na raiz do projeto:
 
 ```bash
-# 1. Instalar dependências do Backend
-cd server
 npm install
-
-# 2. Instalar dependências do Frontend
-cd ../client
-npm install
-
-# 3. Voltar para a raiz do projeto
-cd ..
 ```
 
 ---
 
 ## Como Rodar Localmente
 
-### Opção A: Modo Desenvolvimento (Recomendado com Hot-Reload)
+### Opção A: Modo Desenvolvimento (com Hot-Reload)
 
-Abra dois terminais na raiz do projeto:
-
-**Terminal 1 — Backend Express (Porta 3001):**
 ```bash
-npm run server
-```
-
-**Terminal 2 — Frontend React/Vite (Porta 5173):**
-```bash
-npm run client
+npm run dev
 ```
 
 Acesse no navegador:
-👉 **`http://localhost:5173`**
-
-*(O Vite já está configurado com proxy reverso automático para o backend na porta 3001).*
+👉 **`http://localhost:3000`**
 
 ---
 
-### Opção B: Modo Produção Unificado (Porta Única 3001)
-
-Compila o frontend e sobe toda a aplicação servida diretamente pelo Express:
+### Opção B: Modo Produção (Compilado e Otimizado)
 
 ```bash
-# 1. Compilar o frontend React
-npm run build:client
+# 1. Compilar Next.js (SSG + SSR + Route Handlers)
+npm run build
 
-# 2. Iniciar o servidor em produção
+# 2. Iniciar servidor Next.js na porta 3000
 npm start
 ```
 
 Acesse no navegador:
-👉 **`http://localhost:3001`**
+👉 **`http://localhost:3000`**
 
 ---
 
-## Como Rodar no ngrok (Acesso pelo Celular)
+## Como Rodar no ngrok (Acesso pelo Smartphone)
 
-Com o servidor local em execução, abra um novo terminal e execute:
+Com o servidor rodando na porta 3000:
 
 ```bash
-# Se estiver rodando o frontend em desenvolvimento (porta 5173):
-ngrok http 5173
-
-# Ou se estiver rodando o modo unificado (porta 3001):
-ngrok http 3001
+ngrok http 3000
 ```
 
-Copie a URL pública gerada (ex: `https://xxxx.ngrok-free.app` ou `.ngrok-free.dev`) e abra diretamente no navegador do seu smartphone.
+Copie a URL pública HTTPS gerada pelo ngrok (ex: `https://xxxx.ngrok-free.app`) e abra diretamente no navegador do celular.
 
 ---
 
 ## Testes Automatizados
 
-Para executar os testes de integração do backend (autenticação JWT, integridade do SQLite, sincronização justa de pontos, RBAC e BNCC):
+O projeto possui uma suíte completa de testes de integração ponta a ponta que valida:
+- Health check da API
+- Quick-login de Estudante e Professora
+- Consulta de turmas e metas coletivas
+- Modo compartilhado 4-em-1 e rodízio de posse
+- Quizzes e Fair Sync de pontuação coletiva
+- Gerador de desafios com IA BNCC
+- Mapa de calor de aprendizagem (Heatmap)
+- Notificações de impacto privado
+
+Para rodar os testes:
 
 ```bash
 npm test
@@ -117,14 +103,14 @@ npm test
 
 ---
 
-## Credenciais Pré-Cadastradas (Mocks Iniciais)
+## Credenciais de Demonstração (Seed Automático)
 
-O banco SQLite é inicializado automaticamente com dados de demonstração:
+O banco SQLite é populado automaticamente na primeira execução com dados pedagógicos:
 
 | Papel | E-mail | Senha | Detalhes |
 |---|---|---|---|
 | **Professora** | `professora@kodic.edu` | `senha123` | Profª. Cláudia Mendes (Geografia & História) |
-| **Aluno (Líder / Curador)** | `alex@kodic.edu` | `senha123` | Alex Silva (Dono do aparelho 4-em-1) |
+| **Aluno (Líder / Curador)** | `alex@kodic.edu` | `senha123` | Alex Silva (Dono do aparelho no rodízio 4-em-1) |
 | **Aluna (Revisor)** | `bia@kodic.edu` | `senha123` | Bia Santos |
 | **Aluna (Comunicador)** | `carla@kodic.edu` | `senha123` | Carla Dias |
 | **Aluno (Curador)** | `diego@kodic.edu` | `senha123` | Diego Alves |
@@ -133,54 +119,53 @@ O banco SQLite é inicializado automaticamente com dados de demonstração:
 
 ---
 
-## Estrutura do Projeto
+## Estrutura do Projeto Next.js (100% TypeScript)
 
 ```
 kodicedu/
-├── package.json              # Scripts orquestradores da raiz
-├── README.md                 # Guia de execução e arquitetura
-├── server/                   # Backend Express + SQLite + JWT
-│   ├── data/
-│   │   └── kodicedu.db       # Banco de dados relacional local
-│   ├── src/
-│   │   ├── config/database.js
-│   │   ├── middleware/auth.js
-│   │   ├── routes/
-│   │   │   ├── auth.routes.js
-│   │   │   ├── class.routes.js
-│   │   │   ├── content.routes.js
-│   │   │   ├── group.routes.js
-│   │   │   └── quiz.routes.js
-│   │   ├── seed/seedData.js  # Mocks iniciais completos
-│   │   ├── services/
-│   │   │   ├── bnccService.js
-│   │   │   └── moderationService.js
-│   │   └── index.js
-│   └── test/
-│       ├── api.test.js
-│       └── e2e.test.js
-└── client/                   # Frontend React 18 + Vite
-    ├── index.html
-    ├── vite.config.js
-    └── src/
-        ├── App.jsx
-        ├── index.css
-        ├── main.jsx
-        ├── context/
-        │   ├── AuthContext.jsx
-        │   └── ThemeContext.jsx
-        ├── services/api.js
-        └── components/
-            ├── auth/AuthModal.jsx
-            ├── common/
-            │   ├── Drawer.jsx
-            │   └── Header.jsx
-            ├── student/
-            │   ├── StudentFocusModal.jsx
-            │   ├── StudentGroupTab.jsx
-            │   ├── StudentHomeTab.jsx
-            │   ├── StudentImpactTab.jsx
-            │   └── StudentMissionsTab.jsx
-            └── teacher/
-                └── TeacherDashboard.jsx
+├── package.json              # Configurações e scripts (Next.js 14, Tailwind, shadcn)
+├── next.config.js            # Configuração Next.js (better-sqlite3 & alias)
+├── tailwind.config.js        # Paleta de cores Kodic Edu (purple, fuchsia, amber, green)
+├── postcss.config.js         # PostCSS com Tailwind e Autoprefixer
+├── tsconfig.json             # Configuração TypeScript (@/* -> ./src/*)
+├── data/
+│   └── kodicedu.db           # Banco SQLite local (WAL mode)
+├── test/
+│   └── api.test.js           # Suíte de testes automatizados
+└── src/
+    ├── app/
+    │   ├── api/              # Route Handlers do Back-end Next.js (route.ts)
+    │   │   ├── auth/         # Login, registro, me, quick-login, perfil, LGPD
+    │   │   ├── classes/      # Turmas, metas, onboarding docente
+    │   │   ├── groups/       # Grupos 4-em-1, rodízio de aparelho
+    │   │   ├── quizzes/      # Quizzes, submissão Fair Sync, gerador IA BNCC
+    │   │   ├── content/      # Cadernos híbridos, comunicados, heatmap, impacto
+    │   │   └── health/       # Health check da aplicação
+    │   ├── globals.css       # Estilos globais e tokens de cores
+    │   ├── layout.tsx        # Root Layout com AuthProvider e ThemeProvider
+    │   └── page.tsx          # Mockup de smartphone com visão Aluno e Docente
+    ├── components/
+    │   ├── ui/               # Componentes shadcn/ui (Button, Card, Badge, Input, Progress)
+    │   ├── Header.tsx        # Cabeçalho com alternador de tema e perfil
+    │   ├── Drawer.tsx        # Menu lateral com perfil de inteligência e foco
+    │   ├── AuthView.tsx      # Autenticação com tabs de login, registro e 1-clique
+    │   ├── student/          # Componentes da visão do estudante (.tsx)
+    │   │   ├── StudentHome.tsx
+    │   │   ├── StudentGroup.tsx
+    │   │   ├── StudentMissions.tsx
+    │   │   ├── StudentImpact.tsx
+    │   │   └── StudentFocus.tsx
+    │   └── teacher/          # Painel docente (.tsx)
+    │       └── TeacherDashboard.tsx
+    ├── context/
+    │   ├── AuthContext.tsx   # Estado global de autenticação e RBAC
+    │   └── ThemeContext.tsx  # Tokens visuais e tema escuro/claro
+    └── lib/
+        ├── db.ts             # Conexão SQLite tipada (WAL e foreign keys)
+        ├── seed.ts           # Seed pedagógico idempotente
+        ├── auth.ts           # JWT e hashing com bcryptjs
+        ├── bnccService.ts    # Catálogo de 1.721 habilidades BNCC
+        ├── moderationService.ts # Filtro de moderação por IA
+        └── utils.ts          # Utilitário cn (clsx + tailwind-merge)
 ```
+

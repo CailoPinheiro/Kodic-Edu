@@ -1,0 +1,198 @@
+'use client';
+
+import React, { useState } from 'react';
+import { Megaphone, BrainCircuit, AlertCircle, Check, Sparkles, ChevronRight } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
+
+interface StudentHomeProps {
+  currentClass: any;
+  quizzes: any[];
+  announcements: any[];
+  onDataChange: () => void;
+  showToast: (msg: string) => void;
+  onAnswerCorrect?: () => void;
+}
+
+export function StudentHome({
+  currentClass,
+  quizzes,
+  announcements,
+  onDataChange,
+  showToast,
+  onAnswerCorrect
+}: StudentHomeProps) {
+  const { isDarkMode, theme: t } = useTheme();
+
+  const [selectedQuizIndex, setSelectedQuizIndex] = useState<number>(0);
+  const [answeredState, setAnsweredState] = useState<Record<string | number, { selectedIndex: number; isCorrect: boolean; correctIndex: number }>>({});
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const activeQuiz = quizzes && quizzes.length > 0 ? quizzes[selectedQuizIndex] : null;
+  const isQuizAnswered = activeQuiz && answeredState[activeQuiz.id];
+
+  const handleOptionSelect = async (optionIndex: number) => {
+    if (!activeQuiz || isSubmitting || answeredState[activeQuiz.id]) return;
+
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('kodicedu_token') || localStorage.getItem('kodic_jwt_token');
+      const res = await fetch('/api/quizzes/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          quizId: activeQuiz.id,
+          optionIndex
+        })
+      });
+
+      const result = await res.json();
+
+      setAnsweredState((prev) => ({
+        ...prev,
+        [activeQuiz.id]: {
+          selectedIndex: optionIndex,
+          isCorrect: result.isCorrect,
+          correctIndex: result.correctIndex
+        }
+      }));
+
+      if (result.isCorrect) {
+        if (onAnswerCorrect) onAnswerCorrect();
+        showToast(`🎉 Resposta Correta! +${result.pointsAwarded * (result.fairSyncMembersCount || 4)} pts distribuídos igualmente ao seu grupo 4-em-1 e à Turma!`);
+      } else {
+        showToast('❌ Resposta incorreta. Revise o conceito com o Revisor da sua equipe!');
+      }
+
+      onDataChange();
+    } catch {
+      showToast('Erro ao submeter resposta.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const currentPoints = currentClass?.current_points ?? 7620;
+  const goalPoints = currentClass?.goal_points ?? 8500;
+  const progressPct = Math.min(100, Math.round((currentPoints / goalPoints) * 100));
+  const activeAnnouncement = announcements && announcements.length > 0 ? announcements[0] : null;
+
+  return (
+    <div className="p-5 space-y-5 animate-in fade-in pb-24">
+      {activeAnnouncement && (
+        <div className={`${t.card} rounded-3xl p-5 border-l-4 border-fuchsia-500 transition-colors`}>
+          <div className="flex items-center gap-2 mb-2">
+            <Megaphone className="w-4 h-4 text-fuchsia-500 flex-shrink-0" />
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-300 uppercase tracking-wider">
+              {activeAnnouncement.tag || 'Coordenação'}
+            </span>
+          </div>
+          <h4 className={`${t.textMain} text-sm font-bold`}>{activeAnnouncement.title || 'Quadro Oficial'}</h4>
+          <p className={`${t.textMuted} text-xs mt-1 leading-relaxed`}>
+            {activeAnnouncement.desc || activeAnnouncement.content}
+          </p>
+        </div>
+      )}
+
+      <div className={`${t.card} rounded-3xl p-5 relative overflow-hidden transition-colors`}>
+        <div className="absolute top-0 right-0 p-3">
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+            {progressPct}% Atingido
+          </span>
+        </div>
+        <h2 className={`${t.textMain} font-bold text-lg mb-1`}>Meta Coletiva da Turma</h2>
+        <p className={`${t.textMuted} text-xs mb-4`}>
+          Pontuação Acumulada: <span className="font-bold text-violet-500">{currentPoints.toLocaleString()}</span> / {goalPoints.toLocaleString()} pts
+        </p>
+
+        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 mb-4 overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-violet-500 to-emerald-400 rounded-full transition-all duration-1000"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+
+        <div className={`p-3 rounded-xl ${t.cardSub} flex items-center justify-between border border-emerald-500/20`}>
+          <span className={`${t.textMain} text-xs font-semibold flex items-center gap-2`}>
+            Recompensa Coletiva: {currentClass?.reward_title || 'Passeio Cultural Virtual 🎟'}
+          </span>
+        </div>
+      </div>
+
+      <div className={`${t.card} rounded-3xl p-5 border-2 border-violet-500/30 transition-colors`}>
+        <div className="flex justify-between items-start mb-3">
+          <div>
+            <h2 className={`${t.textMain} font-bold text-lg flex items-center gap-2`}>
+              <BrainCircuit className="w-5 h-5 text-violet-500 flex-shrink-0" />
+              Desafio Diário Coletivo
+            </h2>
+            {activeQuiz && (
+              <span className="text-[10px] font-mono mt-1 text-violet-500 bg-violet-500/10 px-2 py-0.5 rounded inline-block font-bold">
+                {activeQuiz.bnccCode || activeQuiz.bncc}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {activeQuiz && !isQuizAnswered ? (
+          <div className="space-y-4">
+            <p className={`${t.textMain} text-sm font-medium leading-relaxed`}>{activeQuiz.question}</p>
+            <div className="space-y-2">
+              {activeQuiz.options.map((opt: string, i: number) => (
+                <button
+                  key={i}
+                  disabled={isSubmitting}
+                  onClick={() => handleOptionSelect(i)}
+                  className={`w-full p-3 text-left rounded-xl border transition-all text-xs flex items-center gap-2.5 ${
+                    isDarkMode
+                      ? 'border-violet-800/80 bg-white/5 hover:bg-violet-900/40 text-white'
+                      : 'border-violet-200 hover:bg-violet-50 text-slate-800'
+                  }`}
+                >
+                  <span className="font-black text-violet-500 w-4">{['A', 'B', 'C', 'D'][i]}</span>
+                  <span className="flex-1 leading-snug">{opt}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="p-2 rounded-lg bg-amber-500/10 flex items-center justify-between text-[10px] text-amber-600 dark:text-amber-400">
+              <div className="flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>Sincronização Justa: +{activeQuiz.pointsReward || 50} pts por aluno que responder</span>
+              </div>
+              {quizzes.length > 1 && (
+                <button
+                  onClick={() => setSelectedQuizIndex((prev) => (prev + 1) % quizzes.length)}
+                  className="font-bold underline text-violet-500 hover:text-violet-600"
+                >
+                  Pular Desafio
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-2">
+            <div className="w-12 h-12 bg-emerald-500 rounded-full mx-auto flex items-center justify-center shadow-lg text-white">
+              <Check className="w-6 h-6 stroke-[3]" />
+            </div>
+            <h3 className={`${t.textMain} font-bold text-base`}>Tudo Concluído!</h3>
+            <p className={`${t.textMuted} text-xs max-w-xs mx-auto`}>
+              Sua equipe já respondeu a todos os desafios disponíveis hoje com sincronização justa.
+            </p>
+            {quizzes.length > 1 && (
+              <button
+                onClick={() => setSelectedQuizIndex((prev) => (prev + 1) % quizzes.length)}
+                className="mt-2 text-xs font-bold text-violet-500 hover:underline inline-flex items-center gap-1"
+              >
+                <span>Próximo Quiz</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -63,6 +63,30 @@ Em cima dessa base, o app soma outras camadas de uso consciente: papéis colabor
 
 ---
 
+## Screenshots
+
+<!--
+Sugestão de prints (substituir os caminhos abaixo pelos arquivos reais,
+ex: em docs/screenshots/*.png, depois trocar o src de cada img):
+
+<p align="center">
+  <img src="./docs/screenshots/login.png" width="200" alt="Tela de login" />
+  <img src="./docs/screenshots/home-aluno.png" width="200" alt="Home do aluno - Modo Compartilhado" />
+  <img src="./docs/screenshots/painel-professor.png" width="200" alt="Painel do Professor" />
+  <img src="./docs/screenshots/heatmap.png" width="200" alt="Heatmap de aprendizagem" />
+</p>
+-->
+
+*Prints em breve.*
+
+## Demonstração
+
+<!-- Link do vídeo de demo, ex: [Assista no YouTube](https://youtu.be/SEU_LINK_AQUI) -->
+
+*Vídeo em breve.*
+
+---
+
 ## Stack Tecnológica
 
 | Camada | Tecnologia |

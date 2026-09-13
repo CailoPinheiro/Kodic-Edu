@@ -8,10 +8,9 @@ interface StudentGroupProps {
   sharedGroup: any;
   notebooks: any[];
   onDataChange: () => void;
-  showToast: (msg: string) => void;
 }
 
-export function StudentGroup({ sharedGroup, notebooks, onDataChange, showToast }: StudentGroupProps) {
+export function StudentGroup({ sharedGroup, notebooks, onDataChange }: StudentGroupProps) {
   const { isDarkMode, theme: t } = useTheme();
 
   const [hubTab, setHubTab] = useState<'turma' | 'escola'>('turma');
@@ -23,7 +22,7 @@ export function StudentGroup({ sharedGroup, notebooks, onDataChange, showToast }
     setIsRotating(true);
     try {
       const token = localStorage.getItem('kodicedu_token') || localStorage.getItem('kodic_jwt_token');
-      const res = await fetch('/api/groups/rotate-device', {
+      await fetch('/api/groups/rotate-device', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,11 +30,8 @@ export function StudentGroup({ sharedGroup, notebooks, onDataChange, showToast }
         },
         body: JSON.stringify({ groupId: sharedGroup.id })
       });
-      const data = await res.json();
-      showToast(data.message || 'Rodízio de aparelho alternado com sucesso!');
       onDataChange();
     } catch {
-      showToast('Erro ao girar rodízio de aparelho.');
     } finally {
       setIsRotating(false);
     }
@@ -65,10 +61,8 @@ export function StudentGroup({ sharedGroup, notebooks, onDataChange, showToast }
         })
       });
 
-      showToast('📸 Foto do caderno enviada e otimizada (<200KB) com sucesso!');
       onDataChange();
     } catch {
-      showToast('Erro ao enviar caderno.');
     } finally {
       setIsUploading(false);
     }
@@ -176,10 +170,27 @@ export function StudentGroup({ sharedGroup, notebooks, onDataChange, showToast }
                     </div>
                     <p className={`${t.textMain} text-xs font-bold truncate max-w-full`}>{m.name}</p>
                     <p className={`${t.textMuted} text-[10px]`}>{m.role}</p>
-                    <p className="text-[11px] font-black text-emerald-500 mt-1">{m.points} pts</p>
+                    <div className="flex items-center justify-center gap-1 mt-1 flex-wrap">
+                      <p className="text-[11px] font-black text-emerald-500">{m.points} pts</p>
+                      {isHolder && (
+                        <span className="text-[8px] font-bold text-fuchsia-500 bg-fuchsia-500/15 px-1.5 py-0.5 rounded-full">
+                          +10 individual
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
+            </div>
+
+            <div className={`p-3 rounded-2xl ${t.cardSub} border border-violet-500/15 flex items-center justify-between mt-3 text-[10px]`}>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className={t.textMuted}>Regra Fair Sync:</span>
+              </div>
+              <div className="font-bold text-violet-500 text-[10px]">
+                +50 coletivo / +10 ao segurar
+              </div>
             </div>
           </div>
 

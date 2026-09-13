@@ -7,10 +7,9 @@ import { useTheme } from '@/context/ThemeContext';
 interface StudentFocusProps {
   isOpen: boolean;
   onClose: () => void;
-  showToast: (msg: string) => void;
 }
 
-export function StudentFocus({ isOpen, onClose, showToast }: StudentFocusProps) {
+export function StudentFocus({ isOpen, onClose }: StudentFocusProps) {
   const { theme: t } = useTheme();
   const [secondsLeft, setSecondsLeft] = useState<number>(25 * 60);
   const [isActive, setIsActive] = useState<boolean>(false);
@@ -23,21 +22,17 @@ export function StudentFocus({ isOpen, onClose, showToast }: StudentFocusProps) 
       }, 1000);
     } else if (secondsLeft === 0 && isActive) {
       setIsActive(false);
-      showToast('🎉 Ciclo Pomodoro concluído! Hora de um descanso de 5 minutos.');
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, secondsLeft, showToast]);
+  }, [isActive, secondsLeft]);
 
   if (!isOpen) return null;
 
   const toggleTimer = () => {
     const nextState = !isActive;
     setIsActive(nextState);
-    if (nextState) {
-      showToast('⚡ Modo Foco Ativado! Notificações silenciadas para máxima atenção.');
-    }
   };
 
   const resetTimer = () => {

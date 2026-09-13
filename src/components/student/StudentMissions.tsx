@@ -8,14 +8,12 @@ interface StudentMissionsProps {
   quizzes?: any[];
   studentAnswers?: Record<string | number, { answered: boolean; selectedOption: number; isCorrect: boolean }>;
   onGoToHome?: () => void;
-  showToast: (msg: string) => void;
 }
 
 export function StudentMissions({
   quizzes = [],
   studentAnswers = {},
-  onGoToHome,
-  showToast
+  onGoToHome
 }: StudentMissionsProps) {
   const { isDarkMode, theme: t } = useTheme();
   const [missionsSubTab, setMissionsSubTab] = useState<'trilhas' | 'quizzes'>('trilhas');
@@ -48,7 +46,9 @@ export function StudentMissions({
   ];
 
   const handleStartMission = (title: string) => {
-    showToast(`🚀 Continuando trilha: "${title}". Resoluções sincronizadas com sua equipe!`);
+    if (onGoToHome) {
+      onGoToHome();
+    }
   };
 
   return (

@@ -9,7 +9,6 @@ interface StudentHomeProps {
   quizzes: any[];
   announcements: any[];
   onDataChange: () => void;
-  showToast: (msg: string) => void;
   onAnswerCorrect?: () => void;
 }
 
@@ -18,7 +17,6 @@ export function StudentHome({
   quizzes,
   announcements,
   onDataChange,
-  showToast,
   onAnswerCorrect
 }: StudentHomeProps) {
   const { isDarkMode, theme: t } = useTheme();
@@ -59,16 +57,12 @@ export function StudentHome({
         }
       }));
 
-      if (result.isCorrect) {
-        if (onAnswerCorrect) onAnswerCorrect();
-        showToast(`🎉 Resposta Correta! +${result.pointsAwarded * (result.fairSyncMembersCount || 4)} pts distribuídos igualmente ao seu grupo 4-em-1 e à Turma!`);
-      } else {
-        showToast('❌ Resposta incorreta. Revise o conceito com o Revisor da sua equipe!');
+      if (result.isCorrect && onAnswerCorrect) {
+        onAnswerCorrect();
       }
 
       onDataChange();
     } catch {
-      showToast('Erro ao submeter resposta.');
     } finally {
       setIsSubmitting(false);
     }
@@ -157,19 +151,24 @@ export function StudentHome({
               ))}
             </div>
 
-            <div className="p-2 rounded-lg bg-amber-500/10 flex items-center justify-between text-[10px] text-amber-600 dark:text-amber-400">
-              <div className="flex items-center gap-1.5">
-                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>Sincronização Justa: +{activeQuiz.pointsReward || 50} pts por aluno que responder</span>
+            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col gap-1 text-[10px] text-amber-600 dark:text-amber-400">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-bold">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>Fair Sync: +{activeQuiz.pointsReward || 50} pts coletivos por aluno</span>
+                </div>
+                {quizzes.length > 1 && (
+                  <button
+                    onClick={() => setSelectedQuizIndex((prev) => (prev + 1) % quizzes.length)}
+                    className="font-bold underline text-violet-500 hover:text-violet-600"
+                  >
+                    Pular Desafio
+                  </button>
+                )}
               </div>
-              {quizzes.length > 1 && (
-                <button
-                  onClick={() => setSelectedQuizIndex((prev) => (prev + 1) % quizzes.length)}
-                  className="font-bold underline text-violet-500 hover:text-violet-600"
-                >
-                  Pular Desafio
-                </button>
-              )}
+              <p className="text-[9px] opacity-85 pl-5">
+                +10 pts extras individuais para quem está segurando o aparelho
+              </p>
             </div>
           </div>
         ) : (

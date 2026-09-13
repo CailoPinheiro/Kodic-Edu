@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
 
   const isCorrect = Number(chosenIndex) === Number(quiz.correct_index);
   const pointsReward = isCorrect ? quiz.points_reward : 0;
+  const holderBonus = isCorrect ? 10 : 0;
 
   const membership = db.prepare(`
     SELECT group_id FROM group_members WHERE user_id = ? ORDER BY id ASC LIMIT 1
@@ -39,6 +40,9 @@ export async function POST(request: NextRequest) {
 
   if (isCorrect) {
     if (groupId) {
+      const group = db.prepare('SELECT current_device_holder_id FROM groups WHERE id = ?').get(groupId) as any;
+      const currentHolderId = group?.current_device_holder_id || user.id;
+
       const members = db.prepare('SELECT user_id FROM group_members WHERE group_id = ?').all(groupId) as any[];
 
       const updateUser = db.prepare('UPDATE users SET points = points + ? WHERE id = ?');
@@ -50,11 +54,16 @@ export async function POST(request: NextRequest) {
         distributedTo.push(m.user_id);
       }
 
-      totalClassPointsAdded = pointsReward * members.length;
+      if (holderBonus > 0 && currentHolderId) {
+        updateUser.run(holderBonus, currentHolderId);
+        updateMember.run(holderBonus, groupId, currentHolderId);
+      }
+
+      totalClassPointsAdded = (pointsReward * members.length) + holderBonus;
     } else {
-      db.prepare('UPDATE users SET points = points + ? WHERE id = ?').run(pointsReward, user.id);
+      db.prepare('UPDATE users SET points = points + ? WHERE id = ?').run(pointsReward + holderBonus, user.id);
       distributedTo.push(user.id);
-      totalClassPointsAdded = pointsReward;
+      totalClassPointsAdded = pointsReward + holderBonus;
     }
 
     db.prepare('UPDATE classes SET current_points = current_points + ? WHERE id = ?').run(totalClassPointsAdded, quiz.class_id);
@@ -67,6 +76,7 @@ export async function POST(request: NextRequest) {
     isCorrect,
     correctIndex: quiz.correct_index,
     pointsAwarded: pointsReward,
+    holderBonus,
     totalClassPointsAdded,
     classCurrentPoints: updatedClass ? updatedClass.current_points : 0,
     classGoalPoints: updatedClass ? updatedClass.goal_points : 0,

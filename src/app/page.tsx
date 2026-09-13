@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, Users, Gamepad2, Heart, Sparkles, User, GraduationCap, Zap, ChevronUp } from 'lucide-react';
+import { Home, Users, Gamepad2, Heart, Sparkles, ChevronUp } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { Header } from '@/components/Header';
@@ -14,7 +14,7 @@ import { StudentImpact } from '@/components/student/StudentImpact';
 import { TeacherDashboard } from '@/components/teacher/TeacherDashboard';
 
 export default function Page() {
-  const { user, isAuthenticated, isTeacher, quickLogin } = useAuth();
+  const { user, isAuthenticated, isTeacher } = useAuth();
   const { isDarkMode, theme: t } = useTheme();
 
   const [studentTab, setStudentTab] = useState<'inicio' | 'grupo' | 'missoes' | 'impacto'>('inicio');
@@ -30,88 +30,50 @@ export default function Page() {
   const [notebooks, setNotebooks] = useState<any[]>([]);
   const [impactNotifications, setImpactNotifications] = useState<any[]>([]);
 
-  const [toasts, setToasts] = useState<Array<{ id: number; message: string }>>([]);
-
-  const showToast = (message: string) => {
-    const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, message }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3200);
-  };
-
   const loadAppData = async () => {
-    if (!isAuthenticated) return;
     try {
       const token = localStorage.getItem('kodicedu_token') || localStorage.getItem('kodic_jwt_token');
+      if (!token) return;
+
       const headers = { Authorization: `Bearer ${token}` };
 
-      const [classRes, quizzesRes, annRes, impactRes] = await Promise.all([
-        fetch('/api/classes/current', { headers }).then((r) => r.json()).catch(() => ({ class: null })),
-        fetch('/api/quizzes', { headers }).then((r) => r.json()).catch(() => ({ quizzes: [] })),
-        fetch('/api/content/announcements', { headers }).then((r) => r.json()).catch(() => ({ announcements: [] })),
-        fetch('/api/content/impact', { headers }).then((r) => r.json()).catch(() => ({ notifications: [] }))
+      const [classRes, groupRes, quizzesRes, annRes, noteRes, impactRes] = await Promise.all([
+        fetch('/api/classes/current', { headers }).then((r) => r.json()).catch(() => ({})),
+        fetch('/api/groups/shared', { headers }).then((r) => r.json()).catch(() => ({})),
+        fetch('/api/quizzes', { headers }).then((r) => r.json()).catch(() => ({})),
+        fetch('/api/content/announcements', { headers }).then((r) => r.json()).catch(() => ({})),
+        fetch('/api/content/notebooks', { headers }).then((r) => r.json()).catch(() => ({})),
+        fetch('/api/content/impact', { headers }).then((r) => r.json()).catch(() => ({}))
       ]);
 
-      setCurrentClass(classRes.class);
-      setQuizzes(quizzesRes.quizzes || []);
-      setAnnouncements(annRes.announcements || []);
-      setImpactNotifications(impactRes.notifications || []);
-
-      if (!isTeacher) {
-        const [groupRes, notesRes] = await Promise.all([
-          fetch('/api/groups/shared', { headers }).then((r) => r.json()).catch(() => ({ group: null })),
-          fetch('/api/content/notebooks', { headers }).then((r) => r.json()).catch(() => ({ notebooks: [] }))
-        ]);
-        setSharedGroup(groupRes.group);
-        setNotebooks(notesRes.notebooks || []);
-      }
+      if (classRes?.class) setCurrentClass(classRes.class);
+      if (groupRes?.group) setSharedGroup(groupRes.group);
+      if (quizzesRes?.quizzes) setQuizzes(quizzesRes.quizzes);
+      if (annRes?.announcements) setAnnouncements(annRes.announcements);
+      if (noteRes?.notebooks) setNotebooks(noteRes.notebooks);
+      if (impactRes?.notifications) setImpactNotifications(impactRes.notifications);
     } catch {}
   };
 
   useEffect(() => {
-    loadAppData();
-  }, [isAuthenticated, isTeacher]);
+    if (isAuthenticated) {
+      loadAppData();
+    }
+  }, [isAuthenticated, user?.role]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const target = e.currentTarget;
-    setShowScrollTop(target.scrollTop > 70);
+    const scrollTop = e.currentTarget.scrollTop;
+    setShowScrollTop(scrollTop > 200);
   };
 
   const scrollToTop = () => {
-    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   return (
     <div className={`min-h-screen ${t.appBg} flex flex-col items-center justify-center p-2 sm:p-4 font-sans transition-colors duration-500`}>
-      {isAuthenticated && (
-        <div className="w-full max-w-[400px] flex items-center justify-between mb-3 px-2">
-          <div className="flex items-center gap-1.5 text-xs font-black">
-            <Zap className="w-4 h-4 text-fuchsia-500" />
-            <span className={t.textMain}>
-              {isTeacher ? 'Painel do Docente' : 'Visão do Aluno'}
-            </span>
-          </div>
-
-          <button
-            onClick={() => quickLogin(isTeacher ? 'student' : 'teacher')}
-            className={`text-xs font-bold px-3 py-1.5 rounded-xl border border-violet-500/25 ${t.cardSub} ${t.textMain} flex items-center gap-1.5 shadow-sm hover:brightness-105 transition-all`}
-          >
-            {isTeacher ? (
-              <>
-                <User className="w-3.5 h-3.5 text-fuchsia-500" />
-                <span>Alternar para Aluno</span>
-              </>
-            ) : (
-              <>
-                <GraduationCap className="w-3.5 h-3.5 text-violet-500" />
-                <span>Alternar para Professor</span>
-              </>
-            )}
-          </button>
-        </div>
-      )}
-
       <div className={`w-full max-w-[400px] h-[840px] max-h-[92vh] ${t.deviceFrame} rounded-[40px] shadow-2xl relative overflow-hidden flex flex-col border-[8px] transition-colors duration-500`}>
         <div className={`absolute inset-0 bg-gradient-to-b ${t.mainGrad} opacity-40 pointer-events-none`} />
 
@@ -139,7 +101,6 @@ export default function Page() {
               {isTeacher ? (
                 <TeacherDashboard
                   currentClass={currentClass}
-                  showToast={showToast}
                   onDataChange={loadAppData}
                 />
               ) : (
@@ -150,7 +111,6 @@ export default function Page() {
                       quizzes={quizzes}
                       announcements={announcements}
                       onDataChange={loadAppData}
-                      showToast={showToast}
                       onAnswerCorrect={() => setImpactTriggered(true)}
                     />
                   )}
@@ -159,14 +119,12 @@ export default function Page() {
                       sharedGroup={sharedGroup}
                       notebooks={notebooks}
                       onDataChange={loadAppData}
-                      showToast={showToast}
                     />
                   )}
                   {studentTab === 'missoes' && (
                     <StudentMissions
                       quizzes={quizzes}
                       onGoToHome={() => setStudentTab('inicio')}
-                      showToast={showToast}
                     />
                   )}
                   {studentTab === 'impacto' && (
@@ -235,18 +193,6 @@ export default function Page() {
             )}
           </>
         )}
-      </div>
-
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className="flex items-center gap-2 bg-[#1C1242] border border-fuchsia-500/50 text-white text-xs font-semibold px-4 py-2.5 rounded-2xl shadow-2xl pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-200"
-          >
-            <Sparkles className="w-4 h-4 text-fuchsia-400 flex-shrink-0" />
-            <span>{toast.message}</span>
-          </div>
-        ))}
       </div>
     </div>
   );

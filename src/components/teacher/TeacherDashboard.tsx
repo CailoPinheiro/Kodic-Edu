@@ -6,11 +6,10 @@ import { useTheme } from '@/context/ThemeContext';
 
 interface TeacherDashboardProps {
   currentClass: any;
-  showToast: (msg: string) => void;
   onDataChange: () => void;
 }
 
-export function TeacherDashboard({ currentClass, showToast, onDataChange }: TeacherDashboardProps) {
+export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboardProps) {
   const { isDarkMode, theme: t } = useTheme();
 
   const [teacherTab, setTeacherTab] = useState<'visao_geral' | 'bncc' | 'heatmap' | 'moderacao'>('visao_geral');
@@ -67,9 +66,7 @@ export function TeacherDashboard({ currentClass, showToast, onDataChange }: Teac
       const data = await res.json();
       setDraftQuiz(data.quiz);
       setBnccStep('preview');
-      showToast('🤖 Quiz ancorado na BNCC oficial gerado com 0% de risco de alucinação!');
     } catch {
-      showToast('Erro ao consultar matriz BNCC.');
       setBnccStep('select');
     }
   };
@@ -101,10 +98,8 @@ export function TeacherDashboard({ currentClass, showToast, onDataChange }: Teac
       setBnccStep('list');
       setSelectedSkill('');
       setDraftQuiz(null);
-      showToast('🚀 Quiz publicado para a turma com sucesso!');
       onDataChange();
     } catch {
-      showToast('Erro ao publicar quiz.');
     } finally {
       setIsPublishing(false);
     }
@@ -128,12 +123,10 @@ export function TeacherDashboard({ currentClass, showToast, onDataChange }: Teac
         })
       });
 
-      showToast('📢 Comunicado publicado com sucesso no mural dos alunos!');
       setAnnTitle('');
       setAnnDesc('');
       onDataChange();
     } catch {
-      showToast('Erro ao publicar comunicado.');
     }
   };
 
@@ -148,7 +141,6 @@ export function TeacherDashboard({ currentClass, showToast, onDataChange }: Teac
         },
         body: JSON.stringify({ onboardingLevel: lvl })
       });
-      showToast(`Maturidade pedagógica atualizada para: Nível ${lvl}`);
       onDataChange();
     } catch {}
   };
@@ -161,9 +153,7 @@ export function TeacherDashboard({ currentClass, showToast, onDataChange }: Teac
         headers: { Authorization: `Bearer ${token}` }
       });
       setModerationQueue((prev) => prev.filter((item) => item.id !== id));
-      showToast('✅ Material de aluno aprovado pelo corpo docente!');
     } catch {
-      showToast('Erro ao aprovar item.');
     }
   };
 
@@ -279,16 +269,18 @@ export function TeacherDashboard({ currentClass, showToast, onDataChange }: Teac
 
         {teacherTab === 'bncc' && (
           <>
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className={`${t.textMain} font-bold text-xl`}>Gerador IA Ancorado na BNCC</h2>
-                <p className={`${t.textMuted} text-xs mt-1 leading-relaxed`}>
-                  Gera desafios alinhados a 1.721 habilidades curriculares oficiais homologadas pelo MEC.
-                </p>
+            <div className="space-y-1.5 mb-4">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className={`${t.textMain} font-bold text-base sm:text-lg leading-snug`}>
+                  Gerador IA Ancorado na BNCC
+                </h2>
+                <span className="text-[9px] font-bold px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-500 dark:text-blue-400 border border-blue-500/30 uppercase tracking-wide whitespace-nowrap flex-shrink-0">
+                  Zero Alucinação
+                </span>
               </div>
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-400 uppercase flex-shrink-0">
-                Zero Alucinação
-              </span>
+              <p className={`${t.textMuted} text-xs leading-relaxed`}>
+                Gera desafios alinhados a 1.721 habilidades curriculares oficiais homologadas pelo MEC.
+              </p>
             </div>
 
             {bnccStep === 'list' && (
@@ -421,19 +413,19 @@ export function TeacherDashboard({ currentClass, showToast, onDataChange }: Teac
 
         {teacherTab === 'heatmap' && (
           <>
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <h2 className={`${t.textMain} font-bold text-lg leading-tight`}>
-                  Mapa de Aprendizagem (Learning Analytics)
+            <div className="space-y-1.5 mb-4">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className={`${t.textMain} font-bold text-base sm:text-lg leading-snug`}>
+                  Mapa de Aprendizagem (Heatmap)
                 </h2>
+                <span className={`text-[9px] font-bold px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-700 ${t.textMuted} uppercase tracking-wide whitespace-nowrap flex-shrink-0`}>
+                  Sem Vigilância
+                </span>
               </div>
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 ${t.textMuted} uppercase`}>
-                Sem Vigilância Invasiva
-              </span>
+              <p className={`${t.textMuted} text-xs leading-relaxed`}>
+                Acompanhamento 100% pedagógico baseado na BNCC. Sem monitoramento de telas ou aplicativos pessoais.
+              </p>
             </div>
-            <p className={`${t.textMuted} text-xs mb-4 leading-relaxed`}>
-              Acompanhamento 100% pedagógico. Sem monitoramento de telas ou aplicativos pessoais dos alunos.
-            </p>
 
             <div className={`${t.card} rounded-2xl overflow-hidden transition-colors`}>
               <table className="w-full text-left text-xs">
@@ -483,16 +475,18 @@ export function TeacherDashboard({ currentClass, showToast, onDataChange }: Teac
 
         {teacherTab === 'moderacao' && (
           <>
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h2 className={`${t.textMain} font-bold text-lg leading-tight`}>Fila de Moderação em Camadas</h2>
-                <p className={`${t.textMuted} text-xs mt-1 max-w-[220px] leading-relaxed`}>
-                  Filtro automático por IA seguido de validação descentralizada por Líderes de Turma e docentes.
-                </p>
+            <div className="space-y-1.5 mb-4">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className={`${t.textMain} font-bold text-base sm:text-lg leading-snug`}>
+                  Fila de Moderação em Camadas
+                </h2>
+                <span className="text-[9px] font-bold px-2.5 py-1 rounded-full bg-fuchsia-500/15 text-fuchsia-500 dark:text-fuchsia-400 border border-fuchsia-500/30 uppercase tracking-wide whitespace-nowrap flex-shrink-0">
+                  IA + Líderes
+                </span>
               </div>
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-300 uppercase">
-                IA + Líderes
-              </span>
+              <p className={`${t.textMuted} text-xs leading-relaxed`}>
+                Filtro automático por IA seguido de validação descentralizada por Líderes de Turma e docentes.
+              </p>
             </div>
 
             {moderationQueue.length === 0 ? (

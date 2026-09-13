@@ -33,8 +33,8 @@ export async function GET(request: NextRequest) {
   }
 
   const members = db.prepare(`
-    SELECT gm.id as membership_id, gm.role_name as role, gm.has_phone, gm.points,
-           u.id as user_id, u.name, u.avatar_url, u.is_leader, u.grade
+    SELECT gm.id as membership_id, gm.role_name as role, gm.has_phone, u.points as points,
+           u.id as user_id, u.name, u.email, u.avatar_url, u.is_leader, u.grade
     FROM group_members gm
     JOIN users u ON u.id = gm.user_id
     WHERE gm.group_id = ?
@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
       id: `usr_${m.user_id}`,
       userId: m.user_id,
       name: m.name,
+      email: m.email,
       role: m.role,
       roleIcon,
       roleColor,

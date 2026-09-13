@@ -33,7 +33,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
   register: (userData: any) => Promise<User>;
-  quickLogin: (role: 'teacher' | 'student') => Promise<User>;
+  quickLogin: (roleOrEmail: 'teacher' | 'student' | string) => Promise<User>;
   logout: () => void;
   updateIntelligenceRole: (newRole: 'Curador' | 'Revisor' | 'Comunicador') => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -101,11 +101,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return data.user;
   };
 
-  const quickLogin = async (role: 'teacher' | 'student'): Promise<User> => {
+  const quickLogin = async (roleOrEmail: 'teacher' | 'student' | string): Promise<User> => {
+    const isRole = roleOrEmail === 'teacher' || roleOrEmail === 'student';
+    const payload = isRole ? { role: roleOrEmail } : { email: roleOrEmail };
     const res = await fetch('/api/auth/quick-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Quick login failed');

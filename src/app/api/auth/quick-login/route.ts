@@ -7,8 +7,8 @@ export async function POST(request: NextRequest) {
   try {
     ensureSeeded();
 
-    const { role } = await request.json();
-    const targetEmail = role === 'teacher' ? 'professora@kodic.edu' : 'alex@kodic.edu';
+    const body = await request.json().catch(() => ({}));
+    const targetEmail = body.email || (body.role === 'teacher' ? 'professora@kodic.edu' : 'alex@kodic.edu');
 
     const user = db.prepare('SELECT * FROM users WHERE email = ?').get(targetEmail) as any;
     if (!user) {

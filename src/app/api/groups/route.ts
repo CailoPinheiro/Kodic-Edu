@@ -98,13 +98,18 @@ export async function GET(request: NextRequest) {
 
   const enrolledRows = targetClassId
     ? (db.prepare(`
-        SELECT u.id as user_id, u.name, u.email, u.avatar_url, u.grade, u.intelligence_role, u.points, u.is_leader
+        SELECT DISTINCT u.id as user_id, u.name, u.email, u.avatar_url, u.grade, u.intelligence_role, u.points, u.is_leader
         FROM users u
-        JOIN class_enrollments ce ON ce.student_id = u.id
-        WHERE ce.class_id = ?
+        LEFT JOIN class_enrollments ce ON ce.student_id = u.id
+        WHERE u.role = 'student' AND (ce.class_id = ? OR ce.class_id IS NULL)
         ORDER BY u.name ASC
       `).all(targetClassId) as any[])
-    : [];
+    : (db.prepare(`
+        SELECT u.id as user_id, u.name, u.email, u.avatar_url, u.grade, u.intelligence_role, u.points, u.is_leader
+        FROM users u
+        WHERE u.role = 'student'
+        ORDER BY u.name ASC
+      `).all() as any[]);
 
   const studentGroupsMap = new Map<number, { groupId: number; groupName: string }[]>();
   for (const g of groups) {

@@ -1,7 +1,24 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Activity, BrainCircuit, BarChart3, Shield, Megaphone, Plus, CheckSquare, CheckCircle2, Users } from 'lucide-react';
+import {
+  Activity,
+  BrainCircuit,
+  BarChart3,
+  Shield,
+  Megaphone,
+  Plus,
+  CheckSquare,
+  CheckCircle2,
+  Users,
+  Edit3,
+  UserPlus,
+  Trash2,
+  GraduationCap,
+  Sparkles,
+  Check,
+  X
+} from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { TeacherGroups } from './TeacherGroups';
 
@@ -14,35 +31,68 @@ export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboar
   const { isDarkMode, theme: t } = useTheme();
 
   const [teacherTab, setTeacherTab] = useState<'visao_geral' | 'grupos' | 'bncc' | 'heatmap' | 'moderacao'>('visao_geral');
-  const [bnccStep, setBnccStep] = useState<'list' | 'select' | 'generating' | 'preview'>('list');
+  const [bnccStep, setBnccStep] = useState<'list' | 'select' | 'generating' | 'preview' | 'manual'>('list');
   const [selectedSkill, setSelectedSkill] = useState<string>('EM13CHS202');
   const [draftQuiz, setDraftQuiz] = useState<any>(null);
+
+  const [manualQuestion, setManualQuestion] = useState<string>('');
+  const [manualSubject, setManualSubject] = useState<string>('Geografia');
+  const [manualBncc, setManualBncc] = useState<string>('EM13CHS202');
+  const [manualOptions, setManualOptions] = useState<string[]>(['', '', '', '']);
+  const [manualCorrectIndex, setManualCorrectIndex] = useState<number>(0);
 
   const [bnccCatalog, setBnccCatalog] = useState<any[]>([]);
   const [publishedQuizzes, setPublishedQuizzes] = useState<any[]>([]);
   const [heatmapData, setHeatmapData] = useState<any[]>([]);
   const [moderationQueue, setModerationQueue] = useState<any[]>([]);
 
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [isEditingAnnouncement, setIsEditingAnnouncement] = useState<boolean>(false);
   const [annTitle, setAnnTitle] = useState<string>('');
   const [annDesc, setAnnDesc] = useState<string>('');
   const [isPublishing, setIsPublishing] = useState<boolean>(false);
+
+  const [classTeachers, setClassTeachers] = useState<any[]>([]);
+  const [classStudents, setClassStudents] = useState<any[]>([]);
+  const [availableTeachers, setAvailableTeachers] = useState<any[]>([]);
+  const [availableStudents, setAvailableStudents] = useState<any[]>([]);
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
+  const [selectedTeacherRole, setSelectedTeacherRole] = useState<string>('Professor Co-docente');
+  const [selectedStudentId, setSelectedStudentId] = useState<string>('');
+  const [isSubmittingMember, setIsSubmittingMember] = useState<boolean>(false);
+  const [memberFeedback, setMemberFeedback] = useState<string | null>(null);
 
   const loadTeacherData = async () => {
     try {
       const token = localStorage.getItem('kodicedu_token') || localStorage.getItem('kodic_jwt_token');
       const headers = { Authorization: `Bearer ${token}` };
+      const classId = currentClass?.id || 1;
 
-      const [catalogRes, quizzesRes, heatmapRes, modRes] = await Promise.all([
+      const [catalogRes, quizzesRes, heatmapRes, modRes, annRes, membersRes] = await Promise.all([
         fetch('/api/quizzes/bncc-catalog', { headers }).then((r) => r.json()).catch(() => ({ skills: [] })),
         fetch('/api/quizzes', { headers }).then((r) => r.json()).catch(() => ({ quizzes: [] })),
-        fetch('/api/content/heatmap', { headers }).then((r) => r.json()).catch(() => ({ heatmap: [] })),
-        fetch('/api/content/moderation', { headers }).then((r) => r.json()).catch(() => ({ queue: [] }))
+        fetch(`/api/content/heatmap?classId=${classId}`, { headers }).then((r) => r.json()).catch(() => ({ heatmap: [] })),
+        fetch('/api/content/moderation', { headers }).then((r) => r.json()).catch(() => ({ queue: [] })),
+        fetch('/api/content/announcements', { headers }).then((r) => r.json()).catch(() => ({ announcements: [] })),
+        fetch(`/api/classes/members?classId=${classId}`, { headers }).then((r) => r.json()).catch(() => ({ teachers: [], students: [], availableTeachers: [], availableStudents: [] }))
       ]);
 
       setBnccCatalog(catalogRes.skills || []);
       setPublishedQuizzes(quizzesRes.quizzes || []);
       setHeatmapData(heatmapRes.heatmap || []);
       setModerationQueue(modRes.queue || []);
+
+      const anns = annRes.announcements || [];
+      setAnnouncements(anns);
+      if (anns.length > 0) {
+        setAnnTitle(anns[0].title || '');
+        setAnnDesc(anns[0].desc || '');
+      }
+
+      setClassTeachers(membersRes.teachers || []);
+      setClassStudents(membersRes.students || []);
+      setAvailableTeachers(membersRes.availableTeachers || []);
+      setAvailableStudents(membersRes.availableStudents || []);
     } catch {}
   };
 
@@ -77,7 +127,7 @@ export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboar
     setIsPublishing(true);
     try {
       const token = localStorage.getItem('kodicedu_token') || localStorage.getItem('kodic_jwt_token');
-      await fetch('/api/quizzes', {
+      const res = await fetch('/api/quizzes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,22 +145,28 @@ export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboar
         })
       });
 
-      setPublishedQuizzes((prev) => [draftQuiz, ...prev]);
+      const data = await res.json();
+      const created = data?.quiz || { ...draftQuiz, id: Date.now() };
+
+      setPublishedQuizzes((prev) => [created, ...prev]);
       setBnccStep('list');
       setSelectedSkill('');
       setDraftQuiz(null);
       onDataChange();
+      loadTeacherData();
     } catch {
     } finally {
       setIsPublishing(false);
     }
   };
 
-  const handlePublishAnnouncement = async () => {
-    if (!annDesc.trim()) return;
+  const handlePublishManualQuiz = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualQuestion.trim() || manualOptions.some((o) => !o.trim()) || isPublishing) return;
+    setIsPublishing(true);
     try {
       const token = localStorage.getItem('kodicedu_token') || localStorage.getItem('kodic_jwt_token');
-      await fetch('/api/content/announcements', {
+      const res = await fetch('/api/quizzes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,32 +174,214 @@ export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboar
         },
         body: JSON.stringify({
           classId: currentClass?.id || 1,
-          tag: 'COMUNICADO DOCENTE',
-          title: annTitle.trim() || 'Aviso da Coordenação & Professora',
-          desc: annDesc
+          subject: manualSubject,
+          bnccCode: manualBncc,
+          question: manualQuestion.trim(),
+          options: manualOptions.map((o) => o.trim()),
+          correctIndex: manualCorrectIndex,
+          pointsReward: 50,
+          isAiGenerated: 0
         })
       });
 
-      setAnnTitle('');
-      setAnnDesc('');
+      const data = await res.json();
+      const created = data?.quiz || {
+        id: Date.now(),
+        question: manualQuestion,
+        bnccCode: manualBncc,
+        subject: manualSubject
+      };
+
+      setPublishedQuizzes((prev) => [created, ...prev]);
+      setBnccStep('list');
+      setManualQuestion('');
+      setManualOptions(['', '', '', '']);
+      setManualCorrectIndex(0);
       onDataChange();
+      loadTeacherData();
     } catch {
+    } finally {
+      setIsPublishing(false);
     }
   };
 
-  const handleOnboardingChange = async (lvl: number) => {
+  const handlePublishAnnouncement = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!annDesc.trim()) return;
+    setIsPublishing(true);
     try {
       const token = localStorage.getItem('kodicedu_token') || localStorage.getItem('kodic_jwt_token');
-      await fetch(`/api/classes/${currentClass?.id || 1}/onboarding`, {
+      const activeAnn = announcements[0];
+
+      if (isEditingAnnouncement && activeAnn?.id) {
+        await fetch('/api/content/announcements', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            id: activeAnn.id,
+            title: annTitle.trim() || 'Aviso da Coordenação & Professores',
+            desc: annDesc.trim()
+          })
+        });
+      } else {
+        await fetch('/api/content/announcements', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            classId: currentClass?.id || 1,
+            tag: 'COMUNICADO DOCENTE',
+            title: annTitle.trim() || 'Aviso da Coordenação & Professores',
+            desc: annDesc.trim()
+          })
+        });
+      }
+
+      setIsEditingAnnouncement(false);
+      onDataChange();
+      await loadTeacherData();
+    } catch {
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleAddTeacher = async () => {
+    if (!selectedTeacherId) return;
+    setIsSubmittingMember(true);
+    setMemberFeedback(null);
+    try {
+      const token = localStorage.getItem('kodicedu_token') || localStorage.getItem('kodic_jwt_token');
+      const res = await fetch('/api/classes/members', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ onboardingLevel: lvl })
+        body: JSON.stringify({
+          action: 'add_teacher',
+          classId: currentClass?.id || 1,
+          teacherId: Number(selectedTeacherId),
+          roleTitle: selectedTeacherRole
+        })
       });
-      onDataChange();
-    } catch {}
+      const data = await res.json();
+      if (!res.ok) {
+        setMemberFeedback(data.error || 'Erro ao associar professor.');
+      } else {
+        setSelectedTeacherId('');
+        setMemberFeedback('Professor associado à sala com sucesso!');
+        await loadTeacherData();
+        onDataChange();
+      }
+    } catch {
+      setMemberFeedback('Erro na requisição ao associar professor.');
+    } finally {
+      setIsSubmittingMember(false);
+    }
+  };
+
+  const handleRemoveTeacher = async (teacherId: number) => {
+    setIsSubmittingMember(true);
+    setMemberFeedback(null);
+    try {
+      const token = localStorage.getItem('kodicedu_token') || localStorage.getItem('kodic_jwt_token');
+      const res = await fetch('/api/classes/members', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          action: 'remove_teacher',
+          classId: currentClass?.id || 1,
+          teacherId
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMemberFeedback(data.error || 'Erro ao desvincular professor.');
+      } else {
+        setMemberFeedback('Professor desvinculado da sala.');
+        await loadTeacherData();
+        onDataChange();
+      }
+    } catch {
+      setMemberFeedback('Erro na requisição.');
+    } finally {
+      setIsSubmittingMember(false);
+    }
+  };
+
+  const handleAddStudent = async () => {
+    if (!selectedStudentId) return;
+    setIsSubmittingMember(true);
+    setMemberFeedback(null);
+    try {
+      const token = localStorage.getItem('kodicedu_token') || localStorage.getItem('kodic_jwt_token');
+      const res = await fetch('/api/classes/members', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          action: 'add_student',
+          classId: currentClass?.id || 1,
+          studentId: Number(selectedStudentId)
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMemberFeedback(data.error || 'Erro ao matricular estudante.');
+      } else {
+        setSelectedStudentId('');
+        setMemberFeedback('Estudante matriculado na sala com sucesso!');
+        await loadTeacherData();
+        onDataChange();
+      }
+    } catch {
+      setMemberFeedback('Erro na requisição.');
+    } finally {
+      setIsSubmittingMember(false);
+    }
+  };
+
+  const handleRemoveStudent = async (studentId: number) => {
+    setIsSubmittingMember(true);
+    setMemberFeedback(null);
+    try {
+      const token = localStorage.getItem('kodicedu_token') || localStorage.getItem('kodic_jwt_token');
+      const res = await fetch('/api/classes/members', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          action: 'remove_student',
+          classId: currentClass?.id || 1,
+          studentId
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMemberFeedback(data.error || 'Erro ao desvincular estudante.');
+      } else {
+        setMemberFeedback('Estudante desvinculado da sala.');
+        await loadTeacherData();
+        onDataChange();
+      }
+    } catch {
+      setMemberFeedback('Erro na requisição.');
+    } finally {
+      setIsSubmittingMember(false);
+    }
   };
 
   const handleApproveModeration = async (id: number) => {
@@ -168,7 +406,7 @@ export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboar
         {[
           { id: 'visao_geral', label: 'Geral', icon: Activity },
           { id: 'grupos', label: 'Mesas', icon: Users },
-          { id: 'bncc', label: 'BNCC', icon: BrainCircuit },
+          { id: 'bncc', label: 'QUIZ', icon: BrainCircuit },
           { id: 'heatmap', label: 'Heatmap', icon: BarChart3 },
           { id: 'moderacao', label: 'Moderação', icon: Shield }
         ].map((tab) => (
@@ -190,43 +428,270 @@ export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboar
       <div className="p-3.5 space-y-4 animate-in fade-in pb-20">
         {teacherTab === 'visao_geral' && (
           <>
-            <div className={`${t.card} rounded-3xl p-5 transition-colors`}>
+            <div className={`${t.card} rounded-3xl p-5 border-2 border-fuchsia-500/25 transition-colors relative overflow-hidden`}>
               <div className="flex justify-between items-start mb-3">
-                <h2 className={`${t.textMain} font-bold text-sm`}>Onboarding Progressivo do Docente</h2>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-fuchsia-500/15 text-fuchsia-500 flex items-center justify-center shrink-0">
+                    <Megaphone className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className={`${t.textMain} font-bold text-sm`}>Comunicado Oficial Atual</h2>
+                    <span className="text-[10px] text-fuchsia-500 font-medium">Mural da Turma Ativo</span>
+                  </div>
+                </div>
+                {!isEditingAnnouncement && announcements.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setAnnTitle(announcements[0]?.title || '');
+                      setAnnDesc(announcements[0]?.desc || '');
+                      setIsEditingAnnouncement(true);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold ${t.cardSub} ${t.textMain} hover:border-fuchsia-500 border border-violet-500/20 flex items-center gap-1.5 transition-all`}
+                  >
+                    <Edit3 className="w-3 h-3 text-fuchsia-500" />
+                    <span>Mudar Comunicado</span>
+                  </button>
+                )}
+              </div>
+
+              {!isEditingAnnouncement && announcements.length > 0 ? (
+                <div className={`p-4 rounded-2xl ${t.cardSub} border border-violet-500/15 space-y-2`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-500 uppercase tracking-wider">
+                      {announcements[0]?.tag || 'COMUNICADO DOCENTE'}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {announcements[0]?.created_at ? new Date(announcements[0].created_at).toLocaleDateString('pt-BR') : 'Hoje'}
+                    </span>
+                  </div>
+                  <h3 className={`${t.textMain} text-sm font-bold leading-snug`}>
+                    {announcements[0]?.title}
+                  </h3>
+                  <p className={`${t.textMuted} text-xs leading-relaxed whitespace-pre-line`}>
+                    {announcements[0]?.desc}
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handlePublishAnnouncement} className="space-y-3">
+                  <div>
+                    <label className={`${t.textMain} text-[10px] font-bold block mb-1`}>
+                      Título do Comunicado
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Feira de Ciências & Entrega de Trabalhos"
+                      value={annTitle}
+                      onChange={(e) => setAnnTitle(e.target.value)}
+                      className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-black/60 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs outline-none focus:ring-1 focus:ring-fuchsia-500 border border-slate-200 dark:border-violet-500/30 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className={`${t.textMain} text-[10px] font-bold block mb-1`}>
+                      Mensagem / Aviso para os Alunos *
+                    </label>
+                    <textarea
+                      required
+                      value={annDesc}
+                      onChange={(e) => setAnnDesc(e.target.value)}
+                      placeholder="Escreva a mensagem que aparecerá em destaque no celular de todos os estudantes..."
+                      className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-black/60 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs outline-none focus:ring-1 focus:ring-fuchsia-500 resize-none h-24 border border-slate-200 dark:border-violet-500/30 transition-colors"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    {announcements.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingAnnouncement(false)}
+                        className={`flex-1 py-2.5 rounded-xl font-bold text-xs ${t.cardSub} ${t.textMuted}`}
+                      >
+                        Cancelar
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={isPublishing || !annDesc.trim()}
+                      className={`flex-[2] py-2.5 rounded-xl font-bold text-white text-xs ${t.primaryGrad} shadow-md hover:brightness-110 transition-all disabled:opacity-50`}
+                    >
+                      {isPublishing ? 'Publicando...' : 'Salvar e Atualizar Mural'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+
+            <div className={`${t.card} rounded-3xl p-5 border border-violet-500/20 transition-colors space-y-4`}>
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-violet-500/15 text-violet-500 flex items-center justify-center shrink-0">
+                    <GraduationCap className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className={`${t.textMain} font-bold text-sm`}>Gestão da Sala: Professores & Alunos</h2>
+                    <p className={`${t.textMuted} text-[10px]`}>
+                      {currentClass?.name || '1º Ano A — Ensino Médio'} • Código: <span className="font-mono font-bold text-violet-500">{currentClass?.code || 'GEO-2026'}</span>
+                    </p>
+                  </div>
+                </div>
                 <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 uppercase">
-                  Zero Sobrecarga
+                  Sala Conectada
                 </span>
               </div>
-              <div className="flex gap-2">
-                {[
-                  { lvl: 1, title: 'Nível 1', sub: 'Avisos & Quizzes' },
-                  { lvl: 2, title: 'Nível 2', sub: 'Trilhas Híbridas' },
-                  { lvl: 3, title: 'Nível 3', sub: 'IA Analítica' }
-                ].map((item) => {
-                  const isCurrent = (currentClass?.onboarding_level ?? 2) === item.lvl;
-                  return (
-                    <button
-                      key={item.lvl}
-                      onClick={() => handleOnboardingChange(item.lvl)}
-                      className={`flex-1 p-2 rounded-xl text-center transition-all ${
-                        isCurrent
-                          ? 'border-2 border-violet-500 bg-violet-500/10'
-                          : `${t.cardSub} opacity-50`
-                      }`}
+
+              {memberFeedback && (
+                <div className="p-2.5 rounded-xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-between text-[11px] text-violet-600 dark:text-violet-300">
+                  <span>{memberFeedback}</span>
+                  <button onClick={() => setMemberFeedback(null)} className="hover:opacity-75">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className={`${t.textMain} text-xs font-bold uppercase tracking-wider`}>
+                    Professores da Sala ({classTeachers.length})
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  {classTeachers.map((tc: any) => (
+                    <div
+                      key={tc.id}
+                      className={`p-2.5 rounded-xl ${t.cardSub} flex items-center justify-between border border-violet-500/10 text-xs`}
                     >
-                      <span className={`block text-[10px] font-bold ${isCurrent ? 'text-violet-500' : t.textMuted}`}>
-                        {item.title}
-                      </span>
-                      <span className={`${t.textMain} text-[9px] font-medium`}>{item.sub}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-violet-600 to-fuchsia-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                          {(tc.name || 'P').trim().charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className={`${t.textMain} font-bold leading-tight`}>{tc.name}</div>
+                          <div className={`${t.textMuted} text-[10px]`}>{tc.email}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-600 dark:text-violet-300">
+                          {tc.role_title || (tc.is_primary ? 'Titular' : 'Co-docente')}
+                        </span>
+                        {!tc.is_primary && (
+                          <button
+                            onClick={() => handleRemoveTeacher(tc.id)}
+                            disabled={isSubmittingMember}
+                            className="text-slate-400 hover:text-red-500 p-1 rounded-md transition-colors"
+                            title="Desvincular professor"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {availableTeachers.length > 0 && (
+                  <div className="pt-2 flex flex-col sm:flex-row gap-2">
+                    <select
+                      value={selectedTeacherId}
+                      onChange={(e) => setSelectedTeacherId(e.target.value)}
+                      className={`flex-1 p-2 rounded-xl ${t.cardSub} ${t.textMain} text-xs outline-none border border-violet-500/20`}
+                    >
+                      <option value="">Selecionar professor para associar...</option>
+                      {availableTeachers.map((at: any) => (
+                        <option key={at.id} value={at.id}>
+                          {at.name} ({at.email})
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={selectedTeacherRole}
+                      onChange={(e) => setSelectedTeacherRole(e.target.value)}
+                      placeholder="Função (ex: Co-docente)"
+                      className={`w-full sm:w-40 p-2 rounded-xl ${t.cardSub} ${t.textMain} text-xs outline-none border border-violet-500/20`}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddTeacher}
+                      disabled={isSubmittingMember || !selectedTeacherId}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold text-white ${t.primaryGrad} shadow-xs hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-1`}
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Associar</span>
                     </button>
-                  );
-                })}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2 pt-2 border-t border-violet-500/10">
+                <div className="flex justify-between items-center">
+                  <span className={`${t.textMain} text-xs font-bold uppercase tracking-wider`}>
+                    Alunos Matriculados ({classStudents.length})
+                  </span>
+                  <span className="text-[10px] text-violet-500 font-bold">
+                    {classStudents.filter((s: any) => s.group_name && s.group_name !== 'Sem Mesa').length} em Mesas
+                  </span>
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+                  {classStudents.map((st: any) => (
+                    <div
+                      key={st.id}
+                      className={`p-2 rounded-xl ${t.cardSub} flex items-center justify-between border border-violet-500/10 text-xs`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-violet-600 to-fuchsia-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0">
+                          {(st.name || 'A').trim().charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <div className={`${t.textMain} font-bold text-[11px] truncate`}>{st.name}</div>
+                          <div className={`${t.textMuted} text-[9px] truncate`}>
+                            {st.intelligence_role || 'Curador'} • {st.group_name || 'Sem Mesa'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] font-bold text-violet-500">{st.points || 0} pts</span>
+                        <button
+                          onClick={() => handleRemoveStudent(st.id)}
+                          disabled={isSubmittingMember}
+                          className="text-slate-400 hover:text-red-500 p-1 rounded-md transition-colors"
+                          title="Desmatricular aluno"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {availableStudents.length > 0 && (
+                  <div className="pt-2 flex gap-2">
+                    <select
+                      value={selectedStudentId}
+                      onChange={(e) => setSelectedStudentId(e.target.value)}
+                      className={`flex-1 p-2 rounded-xl ${t.cardSub} ${t.textMain} text-xs outline-none border border-violet-500/20`}
+                    >
+                      <option value="">Selecionar aluno cadastrado para matricular...</option>
+                      {availableStudents.map((as: any) => (
+                        <option key={as.id} value={as.id}>
+                          {as.name} ({as.grade || 'Aluno'})
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleAddStudent}
+                      disabled={isSubmittingMember || !selectedStudentId}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold text-white ${t.primaryGrad} shadow-xs hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-1 shrink-0`}
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Matricular</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className={`${t.card} rounded-3xl p-5 relative overflow-hidden transition-colors`}>
               <h2 className={`${t.textMain} font-bold text-sm mb-1`}>
-                Meta Coletiva
+                Meta Coletiva da Turma
               </h2>
               <p className={`${t.textMuted} text-xs mb-3`}>Acompanhamento em tempo real</p>
               <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 mb-2 overflow-hidden">
@@ -239,32 +704,6 @@ export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboar
                 <span className="text-violet-500">{currentPoints.toLocaleString()} pts alcançados</span>
                 <span className={t.textMuted}>Meta: {goalPoints.toLocaleString()}</span>
               </div>
-            </div>
-
-            <div className={`${t.card} rounded-3xl p-5 border-2 border-fuchsia-500/20 transition-colors`}>
-              <h2 className={`${t.textMain} font-bold text-sm mb-3 flex items-center gap-2`}>
-                <Megaphone className="w-4 h-4 text-fuchsia-500" />
-                Publicar Comunicado Oficial
-              </h2>
-              <input
-                type="text"
-                placeholder="Título (Opcional)"
-                value={annTitle}
-                onChange={(e) => setAnnTitle(e.target.value)}
-                className="w-full p-3 rounded-xl bg-slate-900/90 dark:bg-black/60 text-white placeholder:text-slate-400 text-xs mb-2 outline-none focus:ring-1 focus:ring-fuchsia-500 border border-violet-500/30 shadow-inner"
-              />
-              <textarea
-                value={annDesc}
-                onChange={(e) => setAnnDesc(e.target.value)}
-                placeholder="Escreva um aviso para a turma..."
-                className="w-full p-3 rounded-xl bg-slate-900/90 dark:bg-black/60 text-white placeholder:text-slate-400 text-xs focus:outline-none focus:ring-1 focus:ring-fuchsia-500 resize-none h-24 mb-3 border border-violet-500/30 shadow-inner"
-              />
-              <button
-                onClick={handlePublishAnnouncement}
-                className={`w-full py-3 rounded-xl font-bold text-white text-xs ${t.primaryGrad} shadow-md hover:brightness-110 transition-all`}
-              >
-                Publicar no Mural Oficial
-              </button>
             </div>
 
             <div className={`${t.card} rounded-2xl p-3 border border-violet-500/20 transition-colors flex items-center justify-between gap-2.5`}>
@@ -303,26 +742,35 @@ export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboar
             <div className="space-y-1.5 mb-4">
               <div className="flex items-center justify-between gap-2">
                 <h2 className={`${t.textMain} font-bold text-base sm:text-lg leading-snug`}>
-                  Gerador IA Ancorado na BNCC
+                  Gerador de Quizzes
                 </h2>
-                <span className="text-[9px] font-bold px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-500 dark:text-blue-400 border border-blue-500/30 uppercase tracking-wide whitespace-nowrap flex-shrink-0">
-                  Zero Alucinação
+                <span className="text-[9px] font-bold px-2.5 py-1 rounded-full bg-violet-500/15 text-violet-500 dark:text-violet-400 border border-violet-500/30 uppercase tracking-wide whitespace-nowrap flex-shrink-0">
+                  BNCC & IA
                 </span>
               </div>
               <p className={`${t.textMuted} text-xs leading-relaxed`}>
-                Gera desafios alinhados a 1.721 habilidades curriculares oficiais homologadas pelo MEC.
+                Crie desafios manuais ou gere quizzes pedagógicos com inteligência artificial.
               </p>
             </div>
 
             {bnccStep === 'list' && (
               <>
-                <button
-                  onClick={() => setBnccStep('select')}
-                  className={`w-full py-3 rounded-2xl font-bold text-white text-sm ${t.primaryGrad} flex items-center justify-center gap-2 shadow-lg mb-6 hover:brightness-110 transition-all`}
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>Criar Novo Quiz com IA</span>
-                </button>
+                <div className="grid grid-cols-2 gap-2.5 mb-6">
+                  <button
+                    onClick={() => setBnccStep('select')}
+                    className={`py-3 px-3 rounded-2xl font-bold text-white text-xs ${t.primaryGrad} flex items-center justify-center gap-1.5 shadow-md hover:brightness-110 transition-all`}
+                  >
+                    <BrainCircuit className="w-4 h-4 shrink-0" />
+                    <span>Gerar com IA</span>
+                  </button>
+                  <button
+                    onClick={() => setBnccStep('manual')}
+                    className={`py-3 px-3 rounded-2xl font-bold ${t.cardSub} ${t.textMain} border border-violet-500/20 text-xs flex items-center justify-center gap-1.5 hover:border-violet-500 transition-all`}
+                  >
+                    <Plus className="w-4 h-4 shrink-0 text-violet-500" />
+                    <span>Criar Manual</span>
+                  </button>
+                </div>
 
                 <div>
                   <h3 className={`${t.textMain} font-bold text-sm mb-3 flex items-center gap-2`}>
@@ -337,7 +785,7 @@ export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboar
                             {q.bnccCode || q.bncc}
                           </span>
                           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
-                            {q.groupsAnswered || 4} Grupos Responderam
+                            {q.groupsAnswered !== undefined ? q.groupsAnswered : 0} {q.totalGroups ? `de ${q.totalGroups} ` : ''}{q.groupsAnswered === 1 ? 'Grupo Respondeu' : 'Grupos Responderam'}
                           </span>
                         </div>
                         <p className={`${t.textMain} text-xs font-medium truncate`}>{q.question}</p>
@@ -354,13 +802,13 @@ export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboar
                   Selecione a Habilidade BNCC Oficial
                 </label>
                 <select
-                  className={`w-full p-3 rounded-xl ${t.cardSub} ${t.textMain} text-xs mb-4 outline-none border border-violet-500/10`}
+                  className={`w-full p-3 rounded-xl ${t.cardSub} ${t.textMain} text-xs mb-4 outline-none border border-slate-200 dark:border-violet-500/10 transition-colors`}
                   value={selectedSkill}
                   onChange={(e) => setSelectedSkill(e.target.value)}
                 >
-                  <option value="">-- Escolha uma habilidade --</option>
+                  <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">-- Escolha uma habilidade --</option>
                   {bnccCatalog.map((s) => (
-                    <option key={s.code} value={s.code}>
+                    <option key={s.code} value={s.code} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                       [{s.code}] {s.subject} — {s.description.substring(0, 40)}...
                     </option>
                   ))}
@@ -439,6 +887,124 @@ export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboar
                 </div>
               </div>
             )}
+
+            {bnccStep === 'manual' && (
+              <div className={`${t.card} rounded-3xl p-5 border-2 border-violet-500/20 transition-colors space-y-3 animate-in zoom-in-95`}>
+                <div className="flex justify-between items-center pb-2 border-b border-violet-500/10">
+                  <h3 className={`${t.textMain} font-bold text-sm flex items-center gap-1.5`}>
+                    <Plus className="w-4 h-4 text-violet-500" />
+                    <span>Criar Quiz Manual para a Turma</span>
+                  </h3>
+                  <button
+                    onClick={() => setBnccStep('list')}
+                    className="text-xs text-slate-400 hover:text-slate-200"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+
+                <form onSubmit={handlePublishManualQuiz} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className={`${t.textMain} text-[10px] font-bold block mb-1`}>
+                        Disciplina / Trilha
+                      </label>
+                      <select
+                        value={manualSubject}
+                        onChange={(e) => setManualSubject(e.target.value)}
+                        className={`w-full p-2.5 rounded-xl ${t.cardSub} ${t.textMain} text-xs outline-none border border-violet-500/10`}
+                      >
+                        <option value="Geografia">Geografia</option>
+                        <option value="História">História</option>
+                        <option value="Ciências da Natureza">Ciências da Natureza</option>
+                        <option value="Matemática">Matemática</option>
+                        <option value="Língua Portuguesa">Língua Portuguesa</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={`${t.textMain} text-[10px] font-bold block mb-1`}>
+                        Código BNCC
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={manualBncc}
+                        onChange={(e) => setManualBncc(e.target.value)}
+                        placeholder="Ex: EM13CHS202"
+                        className={`w-full p-2.5 rounded-xl ${t.cardSub} ${t.textMain} text-xs outline-none border border-violet-500/10 font-mono`}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={`${t.textMain} text-[10px] font-bold block mb-1`}>
+                      Enunciado da Questão *
+                    </label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={manualQuestion}
+                      onChange={(e) => setManualQuestion(e.target.value)}
+                      placeholder="Digite a pergunta ou problema para as equipes responderem..."
+                      className={`w-full p-2.5 rounded-xl ${t.cardSub} ${t.textMain} text-xs outline-none border border-violet-500/10`}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className={`${t.textMain} text-[10px] font-bold block`}>
+                      Alternativas (marque a letra do Gabarito Correto)
+                    </label>
+                    {manualOptions.map((opt, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setManualCorrectIndex(i)}
+                          className={`w-6 h-6 rounded-lg font-bold text-xs shrink-0 transition-all ${
+                            manualCorrectIndex === i
+                              ? 'bg-emerald-500 text-white shadow-xs'
+                              : `${t.cardSub} ${t.textMuted}`
+                          }`}
+                        >
+                          {['A', 'B', 'C', 'D'][i]}
+                        </button>
+                        <input
+                          type="text"
+                          required
+                          value={opt}
+                          onChange={(e) => {
+                            const updated = [...manualOptions];
+                            updated[i] = e.target.value;
+                            setManualOptions(updated);
+                          }}
+                          placeholder={`Opção ${['A', 'B', 'C', 'D'][i]}`}
+                          className={`flex-1 p-2 rounded-xl ${t.cardSub} ${t.textMain} text-xs outline-none border ${
+                            manualCorrectIndex === i ? 'border-emerald-500/50' : 'border-violet-500/10'
+                          }`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2 pt-2 border-t border-violet-500/10">
+                    <button
+                      type="button"
+                      onClick={() => setBnccStep('list')}
+                      className={`flex-1 py-2.5 rounded-xl font-bold text-xs ${t.cardSub} ${t.textMuted}`}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isPublishing || !manualQuestion.trim() || manualOptions.some((o) => !o.trim())}
+                      className={`flex-[2] py-2.5 rounded-xl font-bold text-white text-xs ${t.primaryGrad} shadow-md hover:brightness-110 transition-all disabled:opacity-50`}
+                    >
+                      {isPublishing ? 'Publicando...' : 'Publicar Quiz para a Turma'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
           </>
         )}
 
@@ -449,57 +1015,103 @@ export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboar
                 <h2 className={`${t.textMain} font-bold text-base sm:text-lg leading-snug`}>
                   Mapa de Aprendizagem (Heatmap)
                 </h2>
-                <span className={`text-[9px] font-bold px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-700 ${t.textMuted} uppercase tracking-wide whitespace-nowrap flex-shrink-0`}>
-                  Sem Vigilância
+                <span className="text-[9px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 uppercase tracking-wide whitespace-nowrap flex-shrink-0">
+                  Métricas Reais
                 </span>
               </div>
               <p className={`${t.textMuted} text-xs leading-relaxed`}>
-                Acompanhamento 100% pedagógico baseado na BNCC. Sem monitoramento de telas ou aplicativos pessoais.
+                Acompanhamento pedagógico 100% real baseado no desempenho dos alunos e grupos nos quizzes da BNCC.
               </p>
             </div>
 
-            <div className={`${t.card} rounded-2xl overflow-hidden transition-colors`}>
-              <table className="w-full text-left text-xs">
-                <thead className={isDarkMode ? 'bg-black/20' : 'bg-slate-100'}>
-                  <tr>
-                    <th className={`p-3 font-bold ${t.textMain} border-b ${isDarkMode ? 'border-violet-800' : 'border-violet-100'}`}>
-                      Código BNCC
-                    </th>
-                    <th className={`p-3 font-bold ${t.textMain} border-b ${isDarkMode ? 'border-violet-800' : 'border-violet-100'}`}>
-                      Domínio (%)
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(heatmapData.length > 0
-                    ? heatmapData
-                    : [
-                        { skill_code: 'EM13CHS101', mastery_percentage: 85, color: 'bg-emerald-500' },
-                        { skill_code: 'EM13CHS202', mastery_percentage: 92, color: 'bg-emerald-500' },
-                        { skill_code: 'EM13LPT02', mastery_percentage: 64, color: 'bg-amber-500' },
-                        { skill_code: 'EM13MAT103', mastery_percentage: 42, color: 'bg-red-500' }
-                      ]
-                  ).map((row: any, i: number) => {
-                    const pct = row.mastery_percentage || row.val;
-                    const barColor = pct >= 80 ? 'bg-emerald-500' : pct >= 60 ? 'bg-amber-500' : 'bg-red-500';
-                    return (
-                      <tr key={i} className={`border-b ${isDarkMode ? 'border-violet-800/50' : 'border-violet-50'}`}>
-                        <td className={`p-3 font-mono text-[11px] font-bold ${t.textMain}`}>
-                          {row.skill_code || row.id}
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                              <div className={`h-full ${barColor}`} style={{ width: `${pct}%` }} />
+            <div className={`${t.card} rounded-2xl overflow-hidden border border-violet-500/15 transition-colors`}>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className={isDarkMode ? 'bg-black/20' : 'bg-slate-100'}>
+                    <tr>
+                      <th className={`p-3 font-bold ${t.textMain} border-b ${isDarkMode ? 'border-violet-800' : 'border-violet-100'}`}>
+                        Habilidade BNCC
+                      </th>
+                      <th className={`p-3 font-bold ${t.textMain} border-b ${isDarkMode ? 'border-violet-800' : 'border-violet-100'}`}>
+                        Domínio Real
+                      </th>
+                      <th className={`p-3 font-bold ${t.textMain} border-b ${isDarkMode ? 'border-violet-800' : 'border-violet-100'}`}>
+                        Atividade Coletiva
+                      </th>
+                      <th className={`p-3 font-bold ${t.textMain} border-b ${isDarkMode ? 'border-violet-800' : 'border-violet-100'}`}>
+                        Diagnóstico
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {heatmapData.map((row: any, i: number) => {
+                      const pct = row.mastery_percentage ?? 0;
+                      const hasSubmissions = (row.total_submissions || 0) > 0;
+                      const barColor = !hasSubmissions
+                        ? 'bg-slate-400'
+                        : pct >= 80
+                        ? 'bg-emerald-500'
+                        : pct >= 60
+                        ? 'bg-amber-500'
+                        : 'bg-red-500';
+
+                      const badgeText = !hasSubmissions
+                        ? 'Sem Respostas'
+                        : pct >= 80
+                        ? 'Alto Domínio'
+                        : pct >= 60
+                        ? 'Em Evolução'
+                        : 'Atenção / Reforço';
+
+                      const badgeClass = !hasSubmissions
+                        ? 'bg-slate-500/15 text-slate-400'
+                        : pct >= 80
+                        ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                        : pct >= 60
+                        ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                        : 'bg-red-500/20 text-red-600 dark:text-red-400';
+
+                      return (
+                        <tr key={i} className={`border-b ${isDarkMode ? 'border-violet-800/50' : 'border-violet-50'}`}>
+                          <td className="p-3">
+                            <span className={`font-mono text-[11px] font-bold ${t.textMain} block`}>
+                              {row.skill_code || row.id}
+                            </span>
+                            <span className={`${t.textMuted} text-[10px] block line-clamp-1`}>
+                              {row.skill_desc || row.subject || 'Habilidade Geral'}
+                            </span>
+                          </td>
+                          <td className="p-3 min-w-[130px]">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                                <div className={`h-full ${barColor}`} style={{ width: `${pct}%` }} />
+                              </div>
+                              <span className={`font-bold ${t.textMain} w-9 text-right font-mono`}>{pct}%</span>
                             </div>
-                            <span className={`font-bold ${t.textMain} w-9 text-right`}>{pct}%</span>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          </td>
+                          <td className={`p-3 ${t.textMuted} text-[10px]`}>
+                            {hasSubmissions ? (
+                              <div>
+                                <span className="font-bold text-violet-500">{row.total_submissions} respostas</span>
+                                <span className="block text-[9px]">
+                                  {row.correct_submissions} acertos • {row.groups_count || 1} mesa(s)
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="italic opacity-60">Nenhum quiz respondido</span>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${badgeClass} uppercase tracking-wider whitespace-nowrap`}>
+                              {badgeText}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </>
         )}

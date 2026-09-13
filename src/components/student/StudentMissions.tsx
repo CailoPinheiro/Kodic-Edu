@@ -1,76 +1,193 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Gamepad2, BrainCircuit, Check, CheckSquare } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Gamepad2, CheckSquare, Sparkles, Compass, ArrowRight, Check, Layers } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 
 interface StudentMissionsProps {
   quizzes?: any[];
+  quizStats?: any;
+  sharedGroup?: any;
   studentAnswers?: Record<string | number, { answered: boolean; selectedOption: number; isCorrect: boolean }>;
   onGoToHome?: () => void;
 }
 
+interface TrilhaItem {
+  id: string;
+  title: string;
+  bnccCode: string;
+  subject: string;
+  description: string;
+  tag: string;
+}
+
+const BASE_TRILHAS: TrilhaItem[] = [
+  {
+    id: 'trilha_EM13CHS202',
+    title: 'Espaço Urbano e Cidades Inteligentes',
+    bnccCode: 'EM13CHS202',
+    subject: 'Geografia',
+    description: 'Análise do impacto tecnológico, mobilidade e redes urbanas nas metrópoles.',
+    tag: 'Trilha Oficial'
+  },
+  {
+    id: 'trilha_EM13CHS101',
+    title: 'Guerra Fria e Geopolítica Pós-1950',
+    bnccCode: 'EM13CHS101',
+    subject: 'História',
+    description: 'Compreensão de processos geopolíticos contemporâneos e corrida tecnológica.',
+    tag: 'Trilha Oficial'
+  },
+  {
+    id: 'trilha_EM13CNT206',
+    title: 'Biomas Brasileiros e Sustentabilidade',
+    bnccCode: 'EM13CNT206',
+    subject: 'Ciências da Natureza',
+    description: 'Dinâmica dos ecossistemas nacionais e preservação socioambiental.',
+    tag: 'Sala Invertida'
+  }
+];
+
 export function StudentMissions({
   quizzes = [],
+  quizStats,
+  sharedGroup,
   studentAnswers = {},
   onGoToHome
 }: StudentMissionsProps) {
-  const { isDarkMode, theme: t } = useTheme();
+  const { theme: t } = useTheme();
   const [missionsSubTab, setMissionsSubTab] = useState<'trilhas' | 'quizzes'>('trilhas');
+  const [activeTrilhaId, setActiveTrilhaId] = useState<string>(BASE_TRILHAS[0].id);
+  const [selectedQuizFilter, setSelectedQuizFilter] = useState<string>('all');
 
-  const defaultQuizzes = quizzes.length > 0 ? quizzes : [
-    {
-      id: 'q1',
-      bncc: 'EM13CHS101',
-      question: 'Qual a principal característica do modo de produção feudal?',
-      options: [
-        'Economia de subsistência e suserania.',
-        'Produção industrial em larga escala.',
-        'Comércio globalizado e rotas marítimas.',
-        'Propriedade coletiva das terras urbanas.'
-      ],
-      correct: 0
-    },
-    {
-      id: 'q2',
-      bncc: 'EM13CHS202',
-      question: 'Como as cidades inteligentes aplicam o conceito de espaço geográfico tecnificado?',
-      options: [
-        'Integrando dados em tempo real para otimizar serviços públicos.',
-        'Substituindo todas as áreas verdes por data centers.',
-        'Isolando bairros periféricos sem rede elétrica.',
-        'Proibindo transporte público em zonas centrais.'
-      ],
-      correct: 0
-    }
-  ];
+  const listQuizzes = useMemo(() => {
+    if (quizStats) return quizzes;
+    if (quizzes.length > 0) return quizzes;
+    return [
+      {
+        id: 1,
+        bnccCode: 'EM13CHS202',
+        subject: 'Geografia',
+        question: "Como o conceito de 'Espaço Geográfico Tecnificado' se aplica ao desenvolvimento de cidades inteligentes?",
+        options: [
+          'Integrando dados em tempo real para otimizar serviços públicos e mobilidade urbana.',
+          'Isolando a população sem acesso à internet das redes municipais de saúde.',
+          'Substituindo todas as áreas verdes por data centers urbanos centralizados.',
+          'Proibindo a utilização de dispositivos móveis no transporte público.'
+        ],
+        correctIndex: 0,
+        completed: false
+      }
+    ];
+  }, [quizzes, quizStats]);
 
-  const handleStartMission = (title: string) => {
-    if (onGoToHome) {
-      onGoToHome();
+  const trilhas = useMemo(() => {
+    const dynamicMap = new Map<string, TrilhaItem>();
+
+    for (const bt of BASE_TRILHAS) {
+      dynamicMap.set(bt.bnccCode, bt);
     }
+
+    for (const q of listQuizzes) {
+      const code = q.bnccCode || q.bncc;
+      if (code && !dynamicMap.has(code)) {
+        dynamicMap.set(code, {
+          id: `trilha_${code}`,
+          title: `Trilha: ${q.subject || 'Atividade Curricular'}`,
+          bnccCode: code,
+          subject: q.subject || 'Multidisciplinar',
+          description: `Desafios curriculares vinculados à matriz ${code}.`,
+          tag: 'Postada pelo Professor'
+        });
+      }
+    }
+
+    return Array.from(dynamicMap.values());
+  }, [listQuizzes]);
+
+  const trilhasWithStats = useMemo(() => {
+    return trilhas.map((trilha) => {
+      const associatedQuizzes = listQuizzes.filter((q) => {
+        const code = q.bnccCode || q.bncc;
+        const subj = (q.subject || '').toLowerCase();
+        const trilhaSubj = (trilha.subject || '').toLowerCase();
+        return (code && code === trilha.bnccCode) || (subj && trilhaSubj && subj === trilhaSubj);
+      });
+
+      const total = associatedQuizzes.length;
+      const completed = associatedQuizzes.filter((q) => q.completed || studentAnswers[q.id]).length;
+      const pending = total - completed;
+      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+      const isCompleted = total > 0 && completed === total;
+
+      return {
+        ...trilha,
+        quizzes: associatedQuizzes,
+        totalQuizzes: total,
+        completedQuizzes: completed,
+        pendingQuizzes: pending,
+        percentage,
+        isCompleted
+      };
+    });
+  }, [trilhas, listQuizzes, studentAnswers]);
+
+  const activeTrilha = trilhasWithStats.find((t) => t.id === activeTrilhaId) || trilhasWithStats[0];
+
+  const groupName = sharedGroup?.name || quizStats?.group?.name || 'sua mesa';
+
+  const isAllCompleted = Boolean(
+    quizStats?.allCompleted ||
+    (listQuizzes.length > 0 && listQuizzes.every((q: any) => q.completed || studentAnswers[q.id]))
+  );
+
+  const displayedQuizzes = useMemo(() => {
+    let baseList = listQuizzes;
+    if (selectedQuizFilter !== 'all') {
+      const targetTrilha = trilhasWithStats.find((tr) => tr.id === selectedQuizFilter);
+      if (targetTrilha) {
+        baseList = targetTrilha.quizzes;
+      }
+    }
+    return baseList.filter((q: any) => !q.completed && !studentAnswers[q.id]);
+  }, [listQuizzes, selectedQuizFilter, trilhasWithStats, studentAnswers]);
+
+  const handleSelectTrilha = (trilhaId: string) => {
+    setActiveTrilhaId(trilhaId);
+    setSelectedQuizFilter(trilhaId);
+  };
+
+  const handleViewTrilhaQuizzes = (trilhaId: string) => {
+    setActiveTrilhaId(trilhaId);
+    setSelectedQuizFilter(trilhaId);
+    setMissionsSubTab('quizzes');
   };
 
   return (
     <div className="p-5 space-y-5 animate-in fade-in pb-24">
-      <div className="mb-2">
-        <h2 className={`${t.textMain} font-bold text-xl flex items-center gap-2`}>
-          <Gamepad2 className="w-5 h-5 text-fuchsia-500" />
-          Trilhas de Aprendizagem (Missões)
-        </h2>
-        <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-500 mt-2 inline-block uppercase">
-          BNCC Integrada
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className={`${t.textMain} font-bold text-xl flex items-center gap-2`}>
+            <Gamepad2 className="w-5 h-5 text-fuchsia-500" />
+            Trilhas & Missões
+          </h2>
+          <p className={`${t.textMuted} text-xs mt-0.5`}>
+            {activeTrilha ? `Trilha Atual: ${activeTrilha.title}` : 'Selecione uma trilha de aprendizagem'}
+          </p>
+        </div>
+        <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-500 uppercase">
+          BNCC
         </span>
       </div>
 
-      <div className={`flex p-1 rounded-2xl ${t.cardSub} mb-4 border border-violet-500/10`}>
+      <div className={`flex p-1 rounded-2xl ${t.cardSub} border border-violet-500/10`}>
         <button
           onClick={() => setMissionsSubTab('trilhas')}
           className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
             missionsSubTab === 'trilhas' ? `${t.card} shadow-sm ${t.textMain}` : t.textMuted
           }`}
         >
-          Trilhas (Missões)
+          Trilhas ({trilhas.length})
         </button>
         <button
           onClick={() => setMissionsSubTab('quizzes')}
@@ -78,123 +195,177 @@ export function StudentMissions({
             missionsSubTab === 'quizzes' ? `${t.card} shadow-sm ${t.textMain}` : t.textMuted
           }`}
         >
-          Quizzes
+          Quizzes {isAllCompleted ? '✓' : `(${listQuizzes.filter((q) => !q.completed && !studentAnswers[q.id]).length})`}
         </button>
       </div>
 
       {missionsSubTab === 'trilhas' && (
         <div className="space-y-4">
-          <div className={`${t.card} rounded-3xl p-5 relative overflow-hidden border border-violet-500/30 transition-colors`}>
-            <div className="absolute top-0 right-0 p-3">
-              <span className="text-[9px] font-bold px-2 py-1 rounded bg-violet-500/20 text-violet-600 dark:text-violet-300 uppercase">
-                Trilha Oficial
-              </span>
-            </div>
-            <h3 className={`${t.textMain} font-bold text-lg mt-4`}>Guerra Fria: Introdução</h3>
-            <p className={`${t.textMuted} text-[10px] font-mono mb-2 font-bold`}>EM13CHS101</p>
-            <p className={`${t.textMuted} text-xs mb-4`}>1 Vídeo Explicativo • 1 Leitura Guiada • 3 Quizzes</p>
-            <div className="flex justify-between text-[10px] font-bold text-violet-500 mb-1">
-              <span>Progresso</span>
-              <span>33%</span>
-            </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 mb-5 overflow-hidden">
-              <div className={`h-2 rounded-full ${t.primaryGrad} w-1/3`} />
+          <div className={`p-3 rounded-2xl ${t.cardSub} border border-violet-500/15 flex items-center justify-between`}>
+            <div className="flex items-center gap-2">
+              <Compass className="w-4 h-4 text-violet-500" />
+              <div>
+                <p className={`${t.textMain} text-[11px] font-bold`}>
+                  Trilha em Foco: {activeTrilha?.title}
+                </p>
+                <p className={`${t.textMuted} text-[9px]`}>
+                  {activeTrilha?.totalQuizzes || 0} quizzes vinculados • {activeTrilha?.pendingQuizzes || 0} pendente(s)
+                </p>
+              </div>
             </div>
             <button
-              onClick={() => handleStartMission('Guerra Fria: Introdução')}
-              className={`w-full py-3 rounded-xl font-bold text-white text-sm ${t.primaryGrad} shadow-md hover:brightness-110 active:scale-[0.99] transition-all`}
+              onClick={() => handleViewTrilhaQuizzes(activeTrilha?.id || trilhasWithStats[0].id)}
+              className="px-2.5 py-1 rounded-xl bg-violet-500 text-white text-[10px] font-bold shadow-xs hover:brightness-110 transition-all flex items-center gap-1"
             >
-              Continuar Trilha
+              <span>Acessar</span>
+              <ArrowRight className="w-3 h-3" />
             </button>
           </div>
 
-          <div className={`${t.card} rounded-3xl p-5 relative overflow-hidden border border-emerald-500/30 transition-colors`}>
-            <div className="absolute top-0 right-0 p-3">
-              <span className="text-[9px] font-bold px-2 py-1 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 uppercase">
-                Sala de Aula Invertida
-              </span>
-            </div>
-            <h3 className={`${t.textMain} font-bold text-lg mt-4`}>Documentário: Biomas Brasileiros</h3>
-            <p className={`${t.textMuted} text-[10px] font-mono mb-2 font-bold`}>EM13CNT206</p>
-            <p className={`${t.textMuted} text-xs mb-4`}>Assistir e anotar 3 dúvidas no caderno físico para debate em equipe.</p>
-            <button
-              onClick={() => handleStartMission('Documentário: Biomas Brasileiros')}
-              className="w-full py-3 rounded-xl font-bold text-emerald-700 dark:text-emerald-400 text-sm bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all"
-            >
-              Continuar Trilha
-            </button>
-          </div>
+          {trilhasWithStats.map((trilha) => {
+            const isActive = trilha.id === activeTrilhaId;
+
+            return (
+              <div
+                key={trilha.id}
+                className={`${t.card} rounded-3xl p-5 relative overflow-hidden border transition-all ${
+                  isActive
+                    ? 'border-violet-500 shadow-md ring-1 ring-violet-500/30'
+                    : 'border-violet-500/15 hover:border-violet-500/40'
+                }`}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
+                    isActive ? 'bg-violet-500 text-white' : 'bg-violet-500/10 text-violet-500'
+                  }`}>
+                    {isActive ? 'Trilha Ativa da Mesa' : trilha.tag}
+                  </span>
+                  <span className="text-[10px] font-mono text-violet-500 bg-violet-500/10 px-2 py-0.5 rounded font-bold">
+                    {trilha.bnccCode}
+                  </span>
+                </div>
+
+                <h3 className={`${t.textMain} font-bold text-base mt-1`}>{trilha.title}</h3>
+                <p className={`${t.textMuted} text-xs mt-1 mb-3 leading-relaxed`}>{trilha.description}</p>
+
+                <div className="flex justify-between text-[10px] font-bold text-violet-500 mb-1">
+                  <span>Progresso da Equipe</span>
+                  <span>{trilha.completedQuizzes}/{trilha.totalQuizzes} quizzes ({trilha.percentage}%)</span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 mb-4 overflow-hidden">
+                  <div
+                    className={`h-2 rounded-full ${t.primaryGrad} transition-all duration-500`}
+                    style={{ width: `${trilha.percentage}%` }}
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {!isActive && (
+                    <button
+                      onClick={() => handleSelectTrilha(trilha.id)}
+                      className={`flex-1 py-2 rounded-xl font-bold text-xs ${t.cardSub} ${t.textMain} border border-violet-500/20 hover:brightness-105 transition-all`}
+                    >
+                      Mudar para esta Trilha
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleViewTrilhaQuizzes(trilha.id)}
+                    className={`flex-1 py-2 rounded-xl font-bold text-white text-xs ${t.primaryGrad} shadow-xs hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-1.5`}
+                  >
+                    <span>{trilha.isCompleted ? 'Rever Quizzes' : 'Ver Quizzes'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
       {missionsSubTab === 'quizzes' && (
         <div className="space-y-4">
-          {defaultQuizzes.map((quiz: any) => {
-            const answer = studentAnswers[quiz.id];
-            const isCorrectAnswer = answer?.isCorrect ?? false;
-            const borderCol = answer
-              ? isCorrectAnswer
-                ? 'border-emerald-500'
-                : 'border-red-500'
-              : 'border-amber-500';
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+            <button
+              onClick={() => setSelectedQuizFilter('all')}
+              className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all ${
+                selectedQuizFilter === 'all'
+                  ? 'bg-violet-600 text-white shadow-xs'
+                  : `${t.cardSub} ${t.textMuted}`
+              }`}
+            >
+              Todas as Trilhas
+            </button>
+            {trilhasWithStats.map((tr) => (
+              <button
+                key={tr.id}
+                onClick={() => {
+                  setSelectedQuizFilter(tr.id);
+                  setActiveTrilhaId(tr.id);
+                }}
+                className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1 ${
+                  selectedQuizFilter === tr.id
+                    ? 'bg-violet-600 text-white shadow-xs'
+                    : `${t.cardSub} ${t.textMuted}`
+                }`}
+              >
+                <span>{tr.subject}</span>
+                {tr.pendingQuizzes > 0 ? (
+                  <span className="w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] flex items-center justify-center">
+                    {tr.pendingQuizzes}
+                  </span>
+                ) : (
+                  <Check className="w-3 h-3 text-emerald-400" />
+                )}
+              </button>
+            ))}
+          </div>
 
-            return (
-              <div key={quiz.id} className={`${t.card} rounded-3xl p-5 border-l-4 ${borderCol} transition-colors`}>
+          {isAllCompleted || displayedQuizzes.length === 0 ? (
+            <div className={`${t.card} rounded-3xl p-6 text-center border-2 border-emerald-500/40 space-y-3 animate-in fade-in`}>
+              <div className="w-14 h-14 bg-emerald-500/20 text-emerald-500 rounded-full mx-auto flex items-center justify-center shadow-inner">
+                <CheckSquare className="w-7 h-7" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full inline-block mb-2">
+                  Quizzes Concluídos
+                </span>
+                <h3 className={`${t.textMain} font-bold text-base`}>
+                  {selectedQuizFilter === 'all'
+                    ? `Quizzes completos para ${groupName}!`
+                    : `Quizzes desta trilha completos para ${groupName}!`}
+                </h3>
+                <p className={`${t.textMuted} text-xs max-w-xs mx-auto mt-1 leading-relaxed`}>
+                  Todos os desafios disponíveis foram respondidos pela sua equipe. Novos quizzes aparecerão aqui assim que o professor publicar atividades.
+                </p>
+              </div>
+              <div className={`p-3 rounded-2xl ${t.cardSub} text-[11px] ${t.textMuted} max-w-xs mx-auto flex items-center justify-center gap-1.5`}>
+                <Sparkles className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span>Aguarde o professor postar novos quizzes nesta trilha.</span>
+              </div>
+            </div>
+          ) : (
+            displayedQuizzes.map((quiz: any) => (
+              <div key={quiz.id} className={`${t.card} rounded-3xl p-5 border-l-4 border-amber-500 transition-colors`}>
                 <div className="flex justify-between items-start mb-3">
-                  <span
-                    className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
-                      answer
-                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-500'
-                        : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
-                    }`}
-                  >
-                    {answer ? 'Respondido' : 'Pendente'}
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded uppercase bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                    Pendente
                   </span>
                   <span className="text-[10px] font-mono text-violet-500 bg-violet-500/10 px-2 py-0.5 rounded font-bold">
-                    {quiz.bnccCode || quiz.bncc}
+                    {quiz.bnccCode || quiz.bncc} • {quiz.subject || 'Geral'}
                   </span>
                 </div>
 
-                {!answer ? (
-                  <>
-                    <p className={`${t.textMain} text-sm font-medium mb-4 leading-relaxed`}>{quiz.question}</p>
-                    <button
-                      onClick={onGoToHome}
-                      className={`w-full py-2.5 rounded-xl font-bold text-xs ${t.primaryGrad} text-white shadow-md hover:brightness-110 transition-all`}
-                    >
-                      Ir para Resolução (Início)
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <p className={`${t.textMain} text-sm font-medium mb-3 leading-relaxed`}>{quiz.question}</p>
-                    <div className="space-y-2">
-                      {quiz.options.map((opt: string, i: number) => {
-                        let rowStyle = `${t.cardSub} ${t.textMuted}`;
-                        let label = null;
-                        const correctIdx = quiz.correctIndex ?? quiz.correct ?? 0;
-
-                        if (i === correctIdx) {
-                          rowStyle = 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-bold';
-                          label = '✓ Correta';
-                        } else if (i === answer.selectedOption && !isCorrectAnswer) {
-                          rowStyle = 'bg-red-500/20 text-red-700 dark:text-red-400 border border-red-500/30 font-bold';
-                          label = '✗ Sua Resposta';
-                        }
-
-                        return (
-                          <div key={i} className={`p-2.5 rounded-xl text-xs flex justify-between items-center ${rowStyle}`}>
-                            <span>{['A', 'B', 'C', 'D'][i]}) {opt}</span>
-                            {label && <span className="text-[10px] uppercase shrink-0 ml-2 font-bold">{label}</span>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
+                <p className={`${t.textMain} text-sm font-medium mb-4 leading-relaxed`}>{quiz.question}</p>
+                <button
+                  onClick={onGoToHome}
+                  className={`w-full py-2.5 rounded-xl font-bold text-xs ${t.primaryGrad} text-white shadow-md hover:brightness-110 transition-all flex items-center justify-center gap-1.5`}
+                >
+                  <span>Ir para Resolução (Início)</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-            );
-          })}
+            ))
+          )}
         </div>
       )}
     </div>

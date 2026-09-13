@@ -65,6 +65,39 @@ export function ensureSeeded(): void {
         });
       }
     }
+
+    const defaultClassId = (db.prepare('SELECT id, teacher_id FROM classes WHERE code = ?').get('GEO-2026') as any);
+    if (defaultClassId) {
+      const defaultPasswordHash = bcrypt.hashSync('senha123', 10);
+      const insertUser = db.prepare(`
+        INSERT OR IGNORE INTO users (name, email, password_hash, role, grade, intelligence_role, is_leader, points, badges_json, lgpd_consent)
+        VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, 1)
+      `);
+      insertUser.run(
+        'Prof. Marcos Andrade',
+        'marcos@kodic.edu',
+        defaultPasswordHash,
+        'teacher',
+        'Ensino Médio — História Integrada',
+        'Revisor',
+        1100,
+        JSON.stringify([{ id: 'b_t2', title: 'Co-docente Conectado', desc: 'Planejamento Integrado', icon: 'book-open', color: 'var(--kodic-purple)' }])
+      );
+
+      const marcosUser = db.prepare('SELECT id FROM users WHERE email = ?').get('marcos@kodic.edu') as any;
+      const insertClassTeacher = db.prepare('INSERT OR IGNORE INTO class_teachers (class_id, teacher_id, role_title) VALUES (?, ?, ?)');
+      insertClassTeacher.run(defaultClassId.id, defaultClassId.teacher_id, 'Professora Titular');
+      if (marcosUser) {
+        insertClassTeacher.run(defaultClassId.id, marcosUser.id, 'Professor Co-docente (História)');
+      }
+
+      const allStudents = db.prepare("SELECT id FROM users WHERE role = 'student'").all() as any[];
+      const insertEnrollment = db.prepare('INSERT OR IGNORE INTO class_enrollments (class_id, student_id) VALUES (?, ?)');
+      allStudents.forEach((st) => {
+        insertEnrollment.run(defaultClassId.id, st.id);
+      });
+    }
+
     isSeeded = true;
     return;
   }
@@ -181,6 +214,9 @@ export function ensureSeeded(): void {
 
     const classId = (db.prepare('SELECT id FROM classes WHERE code = ?').get('GEO-2026') as any)?.id;
     if (!classId) return;
+
+    const insertClassTeacher = db.prepare('INSERT OR IGNORE INTO class_teachers (class_id, teacher_id, role_title) VALUES (?, ?, ?)');
+    insertClassTeacher.run(classId, teacherId, 'Professora Titular');
 
     const insertEnrollment = db.prepare('INSERT OR IGNORE INTO class_enrollments (class_id, student_id) VALUES (?, ?)');
     [alexId, biaId, carlaId, diegoId].forEach((sid) => {

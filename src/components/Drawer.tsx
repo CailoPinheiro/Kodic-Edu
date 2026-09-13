@@ -64,8 +64,12 @@ export function Drawer({ isOpen, onClose }: DrawerProps) {
         <div className="p-5 overflow-y-auto flex-1 space-y-6 custom-scrollbar">
           <div className="flex items-center gap-4">
             <div className={`w-16 h-16 rounded-full ${t.primaryGrad} p-1 shadow-md flex-shrink-0`}>
-              <div className={`w-full h-full rounded-full ${isDarkMode ? 'bg-[#1C1242]' : 'bg-white'} flex items-center justify-center overflow-hidden`}>
-                {user.avatar_url ? (
+              <div className={`w-full h-full rounded-full ${isDarkMode ? 'bg-[#1C1242]' : 'bg-white'} flex items-center justify-center overflow-hidden select-none`}>
+                {isStudent ? (
+                  <span className="font-black text-2xl text-fuchsia-500">
+                    {(user.name || 'A').trim().charAt(0).toUpperCase()}
+                  </span>
+                ) : user.avatar_url ? (
                   <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
                 ) : (
                   <User className="w-8 h-8 text-fuchsia-500" />

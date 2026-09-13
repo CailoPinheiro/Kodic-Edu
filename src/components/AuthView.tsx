@@ -92,7 +92,7 @@ export function AuthView() {
             placeholder="Nome Completo"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className={`w-full p-4 rounded-2xl ${t.card} ${t.textMain} text-sm focus:outline-none border focus:border-fuchsia-500 transition-colors`}
+            className={`w-full p-4 rounded-2xl ${t.card} ${t.textMain} placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus:outline-none border focus:border-fuchsia-500 transition-colors`}
           />
         )}
 
@@ -102,7 +102,7 @@ export function AuthView() {
           placeholder="E-mail Institucional ou Escolar"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className={`w-full p-4 rounded-2xl ${t.card} ${t.textMain} text-sm focus:outline-none border focus:border-fuchsia-500 transition-colors`}
+          className={`w-full p-4 rounded-2xl ${t.card} ${t.textMain} placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus:outline-none border focus:border-fuchsia-500 transition-colors`}
         />
 
         <input
@@ -111,7 +111,7 @@ export function AuthView() {
           placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className={`w-full p-4 rounded-2xl ${t.card} ${t.textMain} text-sm focus:outline-none border focus:border-fuchsia-500 transition-colors`}
+          className={`w-full p-4 rounded-2xl ${t.card} ${t.textMain} placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus:outline-none border focus:border-fuchsia-500 transition-colors`}
         />
 
 

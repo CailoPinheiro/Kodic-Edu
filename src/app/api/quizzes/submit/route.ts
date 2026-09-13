@@ -38,10 +38,12 @@ export async function POST(request: NextRequest) {
   const distributedTo: number[] = [];
   let totalClassPointsAdded = 0;
 
+  let isHolder = false;
   if (isCorrect) {
     if (groupId) {
       const group = db.prepare('SELECT current_device_holder_id FROM groups WHERE id = ?').get(groupId) as any;
       const currentHolderId = group?.current_device_holder_id || user.id;
+      isHolder = currentHolderId === user.id;
 
       const members = db.prepare('SELECT user_id FROM group_members WHERE group_id = ?').all(groupId) as any[];
 
@@ -61,6 +63,7 @@ export async function POST(request: NextRequest) {
 
       totalClassPointsAdded = (pointsReward * members.length) + holderBonus;
     } else {
+      isHolder = true;
       db.prepare('UPDATE users SET points = points + ? WHERE id = ?').run(pointsReward + holderBonus, user.id);
       distributedTo.push(user.id);
       totalClassPointsAdded = pointsReward + holderBonus;
@@ -77,6 +80,7 @@ export async function POST(request: NextRequest) {
     correctIndex: quiz.correct_index,
     pointsAwarded: pointsReward,
     holderBonus,
+    isHolder,
     totalClassPointsAdded,
     classCurrentPoints: updatedClass ? updatedClass.current_points : 0,
     classGoalPoints: updatedClass ? updatedClass.goal_points : 0,

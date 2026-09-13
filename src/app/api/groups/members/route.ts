@@ -62,6 +62,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Estudante ou nome não informado' }, { status: 400 });
   }
 
+  db.prepare('INSERT OR IGNORE INTO class_enrollments (class_id, student_id) VALUES (?, ?)').run(
+    group.class_id,
+    targetUserId
+  );
+
   const existingMember = db.prepare('SELECT id FROM group_members WHERE group_id = ? AND user_id = ?').get(targetGroupId, targetUserId);
   if (existingMember) {
     return NextResponse.json({ error: 'Estudante já está na mesa compartilhada' }, { status: 400 });
@@ -119,7 +124,8 @@ export async function DELETE(request: NextRequest) {
 
   const members = db.prepare('SELECT user_id FROM group_members WHERE group_id = ? ORDER BY id ASC').all(targetGroupId) as any[];
 
-  if (authUser.role !== 'teacher' && members.length <= 1) {
+  const isSelfLeaving = authUser.id === targetUserId;
+  if (!isSelfLeaving && authUser.role !== 'teacher' && members.length <= 1) {
     return NextResponse.json({
       error: 'A mesa compartilhada precisa manter pelo menos 1 estudante ativo no aparelho.'
     }, { status: 400 });

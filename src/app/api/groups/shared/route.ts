@@ -24,12 +24,14 @@ export async function GET(request: NextRequest) {
 
   if (userGroup) {
     group = userGroup;
-  } else {
+  } else if (user.role === 'teacher') {
     group = db.prepare('SELECT * FROM groups WHERE group_type = ? ORDER BY id ASC LIMIT 1').get('Oficial da Disciplina');
+  } else {
+    return NextResponse.json({ group: null });
   }
 
   if (!group) {
-    return NextResponse.json({ error: 'No study group found' }, { status: 404 });
+    return NextResponse.json({ group: null });
   }
 
   const members = db.prepare(`
@@ -72,12 +74,14 @@ export async function GET(request: NextRequest) {
   const currentHolder = formattedMembers.find((m) => m.userId === group.current_device_holder_id) || formattedMembers[0];
 
   const availableStudents = db.prepare(`
-    SELECT u.id as user_id, u.name, u.email, u.avatar_url, u.grade, u.intelligence_role as role, u.points
+    SELECT DISTINCT u.id as user_id, u.name, u.email, u.avatar_url, u.grade, u.intelligence_role as role, u.points
     FROM users u
-    JOIN class_enrollments ce ON ce.student_id = u.id
-    WHERE ce.class_id = ? AND u.id NOT IN (
-      SELECT user_id FROM group_members WHERE group_id = ?
-    )
+    LEFT JOIN class_enrollments ce ON ce.student_id = u.id
+    WHERE u.role = 'student'
+      AND (ce.class_id = ? OR ce.class_id IS NULL)
+      AND u.id NOT IN (
+        SELECT user_id FROM group_members WHERE group_id = ?
+      )
     ORDER BY u.name ASC
   `).all(group.class_id, group.id) as any[];
 

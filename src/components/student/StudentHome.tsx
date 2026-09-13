@@ -1,32 +1,41 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Megaphone, BrainCircuit, AlertCircle, Check, Sparkles, ChevronRight } from 'lucide-react';
+import { Megaphone, BrainCircuit, AlertCircle, Check } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 
 interface StudentHomeProps {
   currentClass: any;
   quizzes: any[];
+  quizStats?: any;
+  sharedGroup?: any;
   announcements: any[];
   onDataChange: () => void;
-  onAnswerCorrect?: () => void;
+  onAnswerCorrect?: (info?: { points: number; isHolder: boolean }) => void;
 }
 
 export function StudentHome({
   currentClass,
   quizzes,
+  quizStats,
+  sharedGroup,
   announcements,
   onDataChange,
   onAnswerCorrect
 }: StudentHomeProps) {
   const { isDarkMode, theme: t } = useTheme();
 
-  const [selectedQuizIndex, setSelectedQuizIndex] = useState<number>(0);
   const [answeredState, setAnsweredState] = useState<Record<string | number, { selectedIndex: number; isCorrect: boolean; correctIndex: number }>>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  const activeQuiz = quizzes && quizzes.length > 0 ? quizzes[selectedQuizIndex] : null;
-  const isQuizAnswered = activeQuiz && answeredState[activeQuiz.id];
+  const isAllCompleted = Boolean(
+    quizStats?.allCompleted ||
+    (quizzes.length > 0 && quizzes.every((q) => q.completed || answeredState[q.id]))
+  );
+
+  const pendingQuiz = quizzes.find((q) => !q.completed && !answeredState[q.id]);
+  const activeQuiz = pendingQuiz || quizzes[0] || null;
+  const isQuizAnswered = activeQuiz && (answeredState[activeQuiz.id] || activeQuiz.completed);
 
   const handleOptionSelect = async (optionIndex: number) => {
     if (!activeQuiz || isSubmitting || answeredState[activeQuiz.id]) return;
@@ -58,7 +67,10 @@ export function StudentHome({
       }));
 
       if (result.isCorrect && onAnswerCorrect) {
-        onAnswerCorrect();
+        onAnswerCorrect({
+          points: result.pointsAwarded || 50,
+          isHolder: Boolean(result.isHolder)
+        });
       }
 
       onDataChange();
@@ -122,7 +134,7 @@ export function StudentHome({
               <BrainCircuit className="w-5 h-5 text-violet-500 flex-shrink-0" />
               Desafio Diário Coletivo
             </h2>
-            {activeQuiz && (
+            {!isAllCompleted && activeQuiz && (
               <span className="text-[10px] font-mono mt-1 text-violet-500 bg-violet-500/10 px-2 py-0.5 rounded inline-block font-bold">
                 {activeQuiz.bnccCode || activeQuiz.bncc}
               </span>
@@ -130,7 +142,19 @@ export function StudentHome({
           </div>
         </div>
 
-        {activeQuiz && !isQuizAnswered ? (
+        {isAllCompleted ? (
+          <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-2.5 animate-in fade-in">
+            <div className="w-12 h-12 bg-emerald-500 rounded-full mx-auto flex items-center justify-center shadow-lg text-white">
+              <Check className="w-6 h-6 stroke-[3]" />
+            </div>
+            <h3 className={`${t.textMain} font-bold text-base`}>
+              Quizzes completos para {sharedGroup?.name || 'sua mesa'}!
+            </h3>
+            <p className={`${t.textMuted} text-xs max-w-xs mx-auto leading-relaxed`}>
+              Sua equipe respondeu a todos os desafios disponíveis. Novos quizzes aparecerão aqui assim que o professor publicar novas atividades.
+            </p>
+          </div>
+        ) : activeQuiz && !isQuizAnswered ? (
           <div className="space-y-4">
             <p className={`${t.textMain} text-sm font-medium leading-relaxed`}>{activeQuiz.question}</p>
             <div className="space-y-2">
@@ -157,14 +181,6 @@ export function StudentHome({
                   <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
                   <span>Fair Sync: +{activeQuiz.pointsReward || 50} pts coletivos por aluno</span>
                 </div>
-                {quizzes.length > 1 && (
-                  <button
-                    onClick={() => setSelectedQuizIndex((prev) => (prev + 1) % quizzes.length)}
-                    className="font-bold underline text-violet-500 hover:text-violet-600"
-                  >
-                    Pular Desafio
-                  </button>
-                )}
               </div>
               <p className="text-[9px] opacity-85 pl-5">
                 +10 pts extras individuais para quem está segurando o aparelho
@@ -176,19 +192,10 @@ export function StudentHome({
             <div className="w-12 h-12 bg-emerald-500 rounded-full mx-auto flex items-center justify-center shadow-lg text-white">
               <Check className="w-6 h-6 stroke-[3]" />
             </div>
-            <h3 className={`${t.textMain} font-bold text-base`}>Tudo Concluído!</h3>
+            <h3 className={`${t.textMain} font-bold text-base`}>Desafio Concluído!</h3>
             <p className={`${t.textMuted} text-xs max-w-xs mx-auto`}>
-              Sua equipe já respondeu a todos os desafios disponíveis hoje com sincronização justa.
+              Resposta registrada com sucesso para o grupo.
             </p>
-            {quizzes.length > 1 && (
-              <button
-                onClick={() => setSelectedQuizIndex((prev) => (prev + 1) % quizzes.length)}
-                className="mt-2 text-xs font-bold text-violet-500 hover:underline inline-flex items-center gap-1"
-              >
-                <span>Próximo Quiz</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
         )}
       </div>

@@ -454,7 +454,7 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Filtrar..."
-            className={`w-full pl-7 pr-2 py-1 rounded-lg ${t.cardSub} ${t.textMain} text-[10px] outline-none border ${isDarkMode ? 'border-violet-800' : 'border-violet-200'}`}
+            className={`w-full pl-7 pr-2 py-1 rounded-lg ${t.cardSub} ${t.textMain} placeholder:text-slate-400 dark:placeholder:text-slate-500 text-[10px] outline-none border ${isDarkMode ? 'border-violet-800' : 'border-violet-200'}`}
           />
         </div>
       </div>
@@ -552,14 +552,10 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
                             }`}
                           >
                             <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <div className={`w-7 h-7 rounded-full flex items-center justify-center overflow-hidden shrink-0 ${
-                                isHolder ? t.primaryGrad : 'bg-slate-300 dark:bg-slate-700'
+                              <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 select-none shadow-xs ${
+                                isHolder ? t.primaryGrad : 'bg-gradient-to-tr from-violet-600 to-fuchsia-600 text-white'
                               }`}>
-                                {member.avatar ? (
-                                  <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
-                                ) : (
-                                  <span className="text-[10px] font-bold text-white">{member.name.charAt(0)}</span>
-                                )}
+                                <span className="text-[10px] font-bold text-white">{(member.name || 'A').trim().charAt(0).toUpperCase()}</span>
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1">
@@ -578,9 +574,9 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
                                     onChange={(e) => handleChangeRole(group.id, member.userId, e.target.value)}
                                     className="bg-violet-500/15 text-violet-600 dark:text-violet-300 text-[9px] font-bold rounded px-1 py-0.2 border-none outline-none cursor-pointer"
                                   >
-                                    <option value="Curador">Curador</option>
-                                    <option value="Revisor">Revisor</option>
-                                    <option value="Comunicador">Comunicador</option>
+                                    <option value="Curador" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Curador</option>
+                                    <option value="Revisor" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Revisor</option>
+                                    <option value="Comunicador" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Comunicador</option>
                                   </select>
                                   <span className="text-[9px] font-black text-emerald-500">
                                     {member.points} pts
@@ -649,12 +645,8 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
                 className={`p-2.5 rounded-2xl border ${t.card} border-violet-500/10 flex items-center justify-between gap-2`}
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-500 text-xs font-bold shrink-0 overflow-hidden">
-                    {student.avatar ? (
-                      <img src={student.avatar} alt={student.name} className="w-full h-full object-cover" />
-                    ) : (
-                      student.name.charAt(0)
-                    )}
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-violet-600 to-fuchsia-600 text-white flex items-center justify-center text-xs font-bold shrink-0 select-none shadow-xs">
+                    {(student.name || 'A').trim().charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
                     <p className={`${t.textMain} text-[11px] font-bold truncate`}>{student.name}</p>
@@ -668,9 +660,22 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
                       {student.assignedGroups[0]?.groupName || 'Em Mesa'}
                     </span>
                   ) : (
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                      Livre
-                    </span>
+                    <button
+                      onClick={() => {
+                        const availableGroup = groups.find((g) => g.memberCount < 4);
+                        if (availableGroup) {
+                          setSelectedAddStudentId(student.userId);
+                          setSelectedAddRole(student.role || 'Curador');
+                          setAddMemberTargetGroup(availableGroup);
+                        } else {
+                          setActionError('Todas as mesas estão com lotação máxima (4 alunos). Crie uma nova mesa para alocar.');
+                        }
+                      }}
+                      className="text-[9px] font-bold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 transition-all flex items-center gap-1"
+                    >
+                      <UserPlus className="w-2.5 h-2.5" />
+                      <span>Livre • Alocar</span>
+                    </button>
                   )}
                 </div>
               </div>
@@ -703,7 +708,7 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
                   placeholder="Ex: Mesa 2 — Biomas"
                   value={newGroupName}
                   onChange={(e) => setNewGroupName(e.target.value)}
-                  className={`w-full p-2 rounded-xl ${t.cardSub} ${t.textMain} text-xs outline-none border ${isDarkMode ? 'border-violet-800' : 'border-violet-200'}`}
+                  className={`w-full p-2 rounded-xl ${t.cardSub} ${t.textMain} placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs outline-none border ${isDarkMode ? 'border-violet-800' : 'border-violet-200'}`}
                 />
               </div>
 
@@ -716,7 +721,7 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
                   placeholder="Ex: Análise de fontes e redação"
                   value={newGroupObjective}
                   onChange={(e) => setNewGroupObjective(e.target.value)}
-                  className={`w-full p-2 rounded-xl ${t.cardSub} ${t.textMain} text-xs outline-none border ${isDarkMode ? 'border-violet-800' : 'border-violet-200'}`}
+                  className={`w-full p-2 rounded-xl ${t.cardSub} ${t.textMain} placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs outline-none border ${isDarkMode ? 'border-violet-800' : 'border-violet-200'}`}
                 />
               </div>
 
@@ -797,7 +802,7 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
                   required
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className={`w-full p-2 rounded-xl ${t.cardSub} ${t.textMain} text-xs outline-none border ${isDarkMode ? 'border-violet-800' : 'border-violet-200'}`}
+                  className={`w-full p-2 rounded-xl ${t.cardSub} ${t.textMain} placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs outline-none border ${isDarkMode ? 'border-violet-800' : 'border-violet-200'}`}
                 />
               </div>
 
@@ -809,7 +814,7 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
                   type="text"
                   value={editObjective}
                   onChange={(e) => setEditObjective(e.target.value)}
-                  className={`w-full p-2 rounded-xl ${t.cardSub} ${t.textMain} text-xs outline-none border ${isDarkMode ? 'border-violet-800' : 'border-violet-200'}`}
+                  className={`w-full p-2 rounded-xl ${t.cardSub} ${t.textMain} placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs outline-none border ${isDarkMode ? 'border-violet-800' : 'border-violet-200'}`}
                 />
               </div>
 
@@ -865,11 +870,11 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
                   }}
                   className={`w-full p-2 rounded-xl ${t.cardSub} ${t.textMain} text-xs outline-none border ${isDarkMode ? 'border-violet-800' : 'border-violet-200'}`}
                 >
-                  <option value="">-- Escolher aluno --</option>
+                  <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">-- Escolher aluno --</option>
                   {enrolledStudents
                     .filter((s) => !addMemberTargetGroup.members.some((m: any) => m.userId === s.userId))
                     .map((s) => (
-                      <option key={s.userId} value={s.userId}>
+                      <option key={s.userId} value={s.userId} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                         {s.name} ({s.role}) {s.isInGroup ? '• já em mesa' : ''}
                       </option>
                     ))}
@@ -885,9 +890,9 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
                   onChange={(e) => setSelectedAddRole(e.target.value)}
                   className={`w-full p-2 rounded-xl ${t.cardSub} ${t.textMain} text-xs outline-none border ${isDarkMode ? 'border-violet-800' : 'border-violet-200'}`}
                 >
-                  <option value="Curador">Curador</option>
-                  <option value="Revisor">Revisor</option>
-                  <option value="Comunicador">Comunicador</option>
+                  <option value="Curador" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Curador</option>
+                  <option value="Revisor" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Revisor</option>
+                  <option value="Comunicador" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Comunicador</option>
                 </select>
               </div>
 

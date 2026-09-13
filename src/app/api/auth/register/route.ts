@@ -34,6 +34,14 @@ export async function POST(request: NextRequest) {
     `).run(name, email, passwordHash, userRole, assignedGrade, assignedIntelRole, defaultBadges);
 
     const userId = result.lastInsertRowid;
+
+    if (userRole === 'student') {
+      const activeClass = db.prepare('SELECT id FROM classes ORDER BY id ASC LIMIT 1').get() as any;
+      if (activeClass) {
+        db.prepare('INSERT OR IGNORE INTO class_enrollments (class_id, student_id) VALUES (?, ?)').run(activeClass.id, userId);
+      }
+    }
+
     const user = db.prepare('SELECT id, name, email, role, grade, intelligence_role, is_leader, points, avatar_url, badges_json FROM users WHERE id = ?').get(userId) as any;
     user.badges = JSON.parse(user.badges_json || '[]');
     delete user.badges_json;

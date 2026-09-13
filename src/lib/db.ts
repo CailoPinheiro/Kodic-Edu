@@ -46,6 +46,17 @@ export function initSchema(): void {
       FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS class_teachers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      class_id INTEGER NOT NULL,
+      teacher_id INTEGER NOT NULL,
+      role_title TEXT DEFAULT 'Professor Titular',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(class_id, teacher_id),
+      FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
+      FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
     CREATE TABLE IF NOT EXISTS class_enrollments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       class_id INTEGER NOT NULL,

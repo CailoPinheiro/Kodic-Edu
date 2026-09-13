@@ -227,7 +227,33 @@ async function runTests() {
   assert.ok(impactData.notifications.length > 0);
   console.log('✓ Private impact notifications passed');
 
-  console.log('\nALL 10 TEST SUITES PASSED SUCCESSFULLY!');
+  const membersRes = await fetch(`${BASE_URL}/api/classes/members?classId=${classData.class.id}`, { headers: teacherHeaders });
+  assert.strictEqual(membersRes.status, 200);
+  const membersData = await membersRes.json();
+  assert.ok(Array.isArray(membersData.teachers));
+  assert.ok(membersData.teachers.length >= 1);
+  assert.ok(Array.isArray(membersData.students));
+  assert.ok(membersData.students.length >= 1);
+  console.log('✓ Class teachers and students association passed');
+
+  assert.ok(heatmapData.heatmap[0].total_submissions !== undefined);
+  assert.ok(heatmapData.heatmap[0].mastery_percentage !== undefined);
+  console.log('✓ Real heatmap metrics verified');
+
+  const annUpdateRes = await fetch(`${BASE_URL}/api/content/announcements`, {
+    method: 'PUT',
+    headers: { ...teacherHeaders, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: 'Comunicado Oficial Atualizado',
+      desc: 'Novo aviso pedagógico exibido em tempo real para todos os alunos.'
+    })
+  });
+  assert.strictEqual(annUpdateRes.status, 200);
+  const annUpdateData = await annUpdateRes.json();
+  assert.strictEqual(annUpdateData.announcement.title, 'Comunicado Oficial Atualizado');
+  console.log('✓ Announcement live update passed');
+
+  console.log('\nALL 12 TEST SUITES PASSED SUCCESSFULLY!');
 }
 
 runTests().catch((err) => {

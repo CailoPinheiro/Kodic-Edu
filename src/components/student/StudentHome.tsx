@@ -76,15 +76,15 @@ export function StudentHome({
   return (
     <div className="p-5 space-y-5 animate-in fade-in pb-24">
       {activeAnnouncement && (
-        <div className={`${t.card} rounded-3xl p-5 border-l-4 border-fuchsia-500 transition-colors`}>
+        <div className="bg-slate-900/95 dark:bg-[#150D33] rounded-3xl p-5 border-l-4 border-l-fuchsia-500 border border-fuchsia-500/25 text-white shadow-lg transition-colors">
           <div className="flex items-center gap-2 mb-2">
-            <Megaphone className="w-4 h-4 text-fuchsia-500 flex-shrink-0" />
-            <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-300 uppercase tracking-wider">
+            <Megaphone className="w-4 h-4 text-fuchsia-400 flex-shrink-0" />
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-300 uppercase tracking-wider">
               {activeAnnouncement.tag || 'Coordenação'}
             </span>
           </div>
-          <h4 className={`${t.textMain} text-sm font-bold`}>{activeAnnouncement.title || 'Quadro Oficial'}</h4>
-          <p className={`${t.textMuted} text-xs mt-1 leading-relaxed`}>
+          <h4 className="text-white text-sm font-bold">{activeAnnouncement.title || 'Quadro Oficial'}</h4>
+          <p className="text-slate-300 text-xs mt-1 leading-relaxed">
             {activeAnnouncement.desc || activeAnnouncement.content}
           </p>
         </div>

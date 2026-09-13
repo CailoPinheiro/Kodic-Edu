@@ -249,13 +249,13 @@ export function TeacherDashboard({ currentClass, onDataChange }: TeacherDashboar
                 placeholder="Título (Opcional)"
                 value={annTitle}
                 onChange={(e) => setAnnTitle(e.target.value)}
-                className={`w-full p-3 rounded-xl ${t.cardSub} ${t.textMain} text-xs mb-2 outline-none focus:ring-1 focus:ring-fuchsia-500 border border-violet-500/10`}
+                className="w-full p-3 rounded-xl bg-slate-900/90 dark:bg-black/60 text-white placeholder:text-slate-400 text-xs mb-2 outline-none focus:ring-1 focus:ring-fuchsia-500 border border-violet-500/30 shadow-inner"
               />
               <textarea
                 value={annDesc}
                 onChange={(e) => setAnnDesc(e.target.value)}
                 placeholder="Escreva um aviso para a turma..."
-                className={`w-full p-3 rounded-xl ${t.cardSub} ${t.textMain} text-xs focus:outline-none focus:ring-1 focus:ring-fuchsia-500 resize-none h-24 mb-3 border border-violet-500/10`}
+                className="w-full p-3 rounded-xl bg-slate-900/90 dark:bg-black/60 text-white placeholder:text-slate-400 text-xs focus:outline-none focus:ring-1 focus:ring-fuchsia-500 resize-none h-24 mb-3 border border-violet-500/30 shadow-inner"
               />
               <button
                 onClick={handlePublishAnnouncement}

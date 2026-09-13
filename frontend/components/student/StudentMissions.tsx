@@ -1,15 +1,17 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Gamepad2, CheckSquare, Sparkles, Compass, ArrowRight, Check, Layers } from 'lucide-react';
+import { Gamepad2, CheckSquare, Sparkles, Compass, ArrowRight, Check, Layers, Heart, BookImage, Link as LinkIcon, Plus, X, Library } from 'lucide-react';
 import { useTheme } from '@/frontend/context/ThemeContext';
 
 interface StudentMissionsProps {
   quizzes?: any[];
   quizStats?: any;
   sharedGroup?: any;
+  notebooks?: any[];
   studentAnswers?: Record<string | number, { answered: boolean; selectedOption: number; isCorrect: boolean }>;
   onGoToHome?: () => void;
+  onDataChange?: () => void;
 }
 
 interface TrilhaItem {
@@ -52,13 +54,58 @@ export function StudentMissions({
   quizzes = [],
   quizStats,
   sharedGroup,
+  notebooks = [],
   studentAnswers = {},
-  onGoToHome
+  onGoToHome,
+  onDataChange
 }: StudentMissionsProps) {
   const { theme: t } = useTheme();
-  const [missionsSubTab, setMissionsSubTab] = useState<'trilhas' | 'quizzes'>('trilhas');
+  const [missionsSubTab, setMissionsSubTab] = useState<'trilhas' | 'quizzes' | 'hub'>('trilhas');
   const [activeTrilhaId, setActiveTrilhaId] = useState<string>(BASE_TRILHAS[0].id);
   const [selectedQuizFilter, setSelectedQuizFilter] = useState<string>('all');
+  const [thankedItems, setThankedItems] = useState<Set<string>>(new Set());
+  const [isMaterialModalOpen, setIsMaterialModalOpen] = useState<boolean>(false);
+  const [materialTitle, setMaterialTitle] = useState<string>('');
+  const [materialType, setMaterialType] = useState<'HANDWRITTEN_NOTEBOOK' | 'MIND_MAP' | 'CURATED_LINK'>('HANDWRITTEN_NOTEBOOK');
+  const [materialUrl, setMaterialUrl] = useState<string>('');
+  const [isSubmittingMaterial, setIsSubmittingMaterial] = useState<boolean>(false);
+
+  const handleThank = (key: string) => {
+    setThankedItems((prev) => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+  };
+
+  const handleAddMaterial = async () => {
+    if (isSubmittingMaterial || !materialTitle.trim()) return;
+    setIsSubmittingMaterial(true);
+    try {
+      const token = localStorage.getItem('kodicedu_token') || localStorage.getItem('kodic_jwt_token');
+      const res = await fetch('/api/content/notebooks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: materialTitle.trim(),
+          type: materialType,
+          imageUrl: materialUrl.trim() || undefined
+        })
+      });
+      if (res.ok) {
+        setMaterialTitle('');
+        setMaterialUrl('');
+        setMaterialType('HANDWRITTEN_NOTEBOOK');
+        setIsMaterialModalOpen(false);
+        onDataChange?.();
+      }
+    } finally {
+      setIsSubmittingMaterial(false);
+    }
+  };
 
   const listQuizzes = useMemo(() => {
     if (quizStats) return quizzes;
@@ -196,6 +243,14 @@ export function StudentMissions({
           }`}
         >
           Quizzes {isAllCompleted ? '✓' : `(${listQuizzes.filter((q) => !q.completed && !studentAnswers[q.id]).length})`}
+        </button>
+        <button
+          onClick={() => setMissionsSubTab('hub')}
+          className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
+            missionsSubTab === 'hub' ? `${t.card} shadow-sm ${t.textMain}` : t.textMuted
+          }`}
+        >
+          Hub ({notebooks.length})
         </button>
       </div>
 
@@ -366,6 +421,164 @@ export function StudentMissions({
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {missionsSubTab === 'hub' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className={`${t.textMuted} text-[11px] leading-relaxed max-w-[220px]`}>
+              Conteúdo e quizzes publicados por toda a turma, de todas as matérias. Agradeça o que te ajudou.
+            </p>
+            <button
+              onClick={() => setIsMaterialModalOpen(true)}
+              className={`flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-xl text-[10px] font-bold text-white ${t.primaryGrad} shadow-xs hover:brightness-110 transition-all`}
+            >
+              <Plus className="w-3.5 h-3.5" /> Publicar
+            </button>
+          </div>
+
+          {notebooks.length === 0 && listQuizzes.length === 0 ? (
+            <div className={`${t.cardSub} rounded-2xl p-5 text-center border border-dashed border-violet-500/20`}>
+              <Library className={`w-6 h-6 mx-auto mb-2 ${t.textMuted}`} />
+              <p className={`${t.textMuted} text-[11px]`}>
+                Nada publicado na turma ainda. Seja o primeiro a compartilhar um material.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {notebooks.map((n: any) => {
+                const key = `notebook-${n.id}`;
+                const isThanked = thankedItems.has(key);
+                return (
+                  <div
+                    key={key}
+                    className={`${t.card} rounded-2xl p-3.5 border border-violet-500/10 flex items-center gap-3 shadow-sm`}
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-violet-500/15 text-violet-500 flex items-center justify-center flex-shrink-0">
+                      {n.type === 'CURATED_LINK' ? <LinkIcon className="w-4 h-4" /> : <BookImage className="w-4 h-4" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={`${t.textMain} text-xs font-bold truncate`}>{n.title}</p>
+                      <p className={`${t.textMuted} text-[10px] truncate`}>{n.author_name} &middot; {n.badge}</p>
+                    </div>
+                    <button
+                      onClick={() => handleThank(key)}
+                      disabled={isThanked}
+                      title="Agradecer silenciosamente"
+                      className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                        isThanked ? 'bg-pink-500/15 text-pink-500' : `${t.cardSub} ${t.textMuted} hover:text-pink-500`
+                      }`}
+                    >
+                      <Heart className={`w-3.5 h-3.5 ${isThanked ? 'fill-pink-500' : ''}`} />
+                    </button>
+                  </div>
+                );
+              })}
+
+              {listQuizzes.map((q: any) => {
+                const key = `quiz-${q.id}`;
+                const isThanked = thankedItems.has(key);
+                return (
+                  <div
+                    key={key}
+                    className={`${t.card} rounded-2xl p-3.5 border border-violet-500/10 flex items-center gap-3 shadow-sm`}
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center flex-shrink-0">
+                      <Gamepad2 className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={`${t.textMain} text-xs font-bold truncate`}>{q.question}</p>
+                      <p className={`${t.textMuted} text-[10px] truncate`}>{q.subject || 'Geral'} &middot; {q.bnccCode || q.bncc}</p>
+                    </div>
+                    <button
+                      onClick={() => handleThank(key)}
+                      disabled={isThanked}
+                      title="Agradecer silenciosamente"
+                      className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                        isThanked ? 'bg-pink-500/15 text-pink-500' : `${t.cardSub} ${t.textMuted} hover:text-pink-500`
+                      }`}
+                    >
+                      <Heart className={`w-3.5 h-3.5 ${isThanked ? 'fill-pink-500' : ''}`} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {isMaterialModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className={`w-full max-w-sm rounded-3xl p-5 ${t.card} border border-violet-500/20 shadow-2xl space-y-4`}>
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className={`${t.textMain} font-bold text-sm flex items-center gap-1.5`}>
+                  <BookImage className="w-4 h-4 text-fuchsia-500" />
+                  Publicar no Hub da Turma
+                </h3>
+                <p className={`${t.textMuted} text-[10px]`}>
+                  Foto de resolução, mapa mental ou link recomendado.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsMaterialModalOpen(false)}
+                className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <p className={`${t.textMuted} text-[10px] font-medium`}>Tipo de material:</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {([
+                  { value: 'HANDWRITTEN_NOTEBOOK', label: 'Caderno' },
+                  { value: 'MIND_MAP', label: 'Mapa Mental' },
+                  { value: 'CURATED_LINK', label: 'Link' }
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setMaterialType(opt.value)}
+                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all ${
+                      materialType === opt.value
+                        ? 'bg-fuchsia-500 text-white shadow-xs'
+                        : `${t.cardSub} ${t.textMuted} hover:brightness-95`
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <input
+              type="text"
+              value={materialTitle}
+              onChange={(e) => setMaterialTitle(e.target.value)}
+              placeholder="Título (ex: Resolução Equação de 2º Grau)"
+              className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs outline-none focus:ring-1 focus:ring-fuchsia-500 border border-slate-200 dark:border-violet-800/60"
+            />
+
+            <input
+              type="text"
+              value={materialUrl}
+              onChange={(e) => setMaterialUrl(e.target.value)}
+              placeholder="URL da foto ou link (opcional)"
+              className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs outline-none focus:ring-1 focus:ring-fuchsia-500 border border-slate-200 dark:border-violet-800/60"
+            />
+
+            <button
+              onClick={handleAddMaterial}
+              disabled={isSubmittingMaterial || !materialTitle.trim()}
+              className={`w-full py-2.5 rounded-xl text-xs font-bold text-white ${t.primaryGrad} shadow-md hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5`}
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>Publicar no Hub</span>
+            </button>
+          </div>
         </div>
       )}
     </div>

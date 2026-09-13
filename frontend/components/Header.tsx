@@ -1,16 +1,17 @@
 'use client';
 
 import React from 'react';
-import { Menu, Zap, Sun, Moon, Bell, LogOut } from 'lucide-react';
+import { Menu, Zap, Sun, Moon, Bell, LogOut, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/frontend/context/AuthContext';
 import { useTheme } from '@/frontend/context/ThemeContext';
 
 interface HeaderProps {
   onOpenDrawer: () => void;
   onSelectTab: (tab: string) => void;
+  onOpenTutorial: () => void;
 }
 
-export function Header({ onOpenDrawer, onSelectTab }: HeaderProps) {
+export function Header({ onOpenDrawer, onSelectTab, onOpenTutorial }: HeaderProps) {
   const { logout, isTeacher } = useAuth();
   const { isDarkMode, toggleTheme, theme: t } = useTheme();
 
@@ -42,6 +43,14 @@ export function Header({ onOpenDrawer, onSelectTab }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
+        <button
+          onClick={onOpenTutorial}
+          className={`w-9 h-9 rounded-full ${t.cardSub} flex items-center justify-center transition-colors border border-violet-500/15`}
+          title="Como funciona o Kodic Edu"
+        >
+          <HelpCircle className={`w-4 h-4 ${t.textMain}`} />
+        </button>
+
         <button
           onClick={toggleTheme}
           className={`w-9 h-9 rounded-full ${t.cardSub} flex items-center justify-center transition-colors border border-violet-500/15`}

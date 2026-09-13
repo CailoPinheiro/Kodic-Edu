@@ -62,8 +62,10 @@ Regra geral: só é **REAL** o que sustenta o "uau" central da demo (professor g
 
 | ID | Requisito | Status |
 |----|-----------|--------|
-| RF-19 | Membros do grupo podem adicionar um item ao repositório do grupo: upload de foto (caderno) ou link, com tag do tipo ("Print de Caderno" / "Link Recomendado"). Lista simples, sem pastas automáticas. | 🟢 REAL (simplificado) |
+| RF-19 | Aluno publica um item no **Hub da Turma** (aba dentro de Missões): upload de foto (caderno), mapa mental ou link, com tag do tipo. O item fica visível pra turma toda, não só pro grupo de quem publicou (`POST /api/content/notebooks`, sem `group_id` no schema). Lista simples, sem pastas automáticas. | 🟢 REAL (simplificado) |
 | RF-20 | Tela "Trilhas de Aprendizagem (Missões)": o título/descrição de cada trilha é um template fixo, mas os quizzes são vinculados a ela por código BNCC/matéria e o percentual de progresso é calculado de verdade a partir de quais quizzes o grupo já respondeu (`frontend/components/student/StudentMissions.tsx`). | 🟢 REAL (progresso) / 🟡 MOCK (texto e tema da trilha) |
+| RF-33 | **Hub da Turma**: aba dentro de Missões que lista, num feed único, os materiais publicados (RF-19) e os quizzes já postados pelo professor, de todas as matérias, não filtrado por grupo/mesa. | 🟢 REAL |
+| RF-34 | No Hub, o aluno pode "agradecer silenciosamente" um item específico de conteúdo (material ou quiz): um coração que fica preenchido depois do clique. Não persiste no banco nem notifica quem publicou; é só estado local do componente, perdido ao recarregar a página. | 🟡 MOCK |
 
 ### G. Perfil, Papéis e Bem-estar
 
@@ -72,7 +74,7 @@ Regra geral: só é **REAL** o que sustenta o "uau" central da demo (professor g
 | RF-21 | Perfil exibe papel fixo do aluno (Curador/Revisor/Comunicador) e badges estáticas (Líder de Turma, Mentor Ouro / Mentor BNCC, Docente Inovador para o professor), hardcoded no usuário demo. | 🟢 REAL (dado fixo, UI real) |
 | RF-22 | "Modo Foco (Pomodoro 25 min)": timer real client-side de contagem regressiva. Sem integração real com notificações do sistema operacional. | 🟢 REAL (simples) |
 | RF-23 | Texto fixo de "Privacy by Design & LGPD" no menu lateral. | 🟡 MOCK |
-| RF-24 | Aba "Impacto Silencioso": lista de notificações privadas, 100% pré-cadastrada via seed (`gratitude_notifications`). Responder um quiz certo não dispara nenhuma notificação nova (`quizzes/submit` não escreve nessa tabela). | 🟡 MOCK |
+| RF-24 | Aba "Impacto Silencioso": lista de notificações privadas, 100% pré-cadastrada via seed (`gratitude_notifications`). Responder um quiz certo não dispara nenhuma notificação nova, e o "agradecer" do Hub (RF-34) também não alimenta essa lista: são duas pontas mockadas ainda desconectadas uma da outra. | 🟡 MOCK |
 
 ### H. Governança
 

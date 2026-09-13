@@ -13,6 +13,7 @@ import { StudentMissions } from '@/frontend/components/student/StudentMissions';
 import { StudentImpact } from '@/frontend/components/student/StudentImpact';
 import { TeacherDashboard } from '@/frontend/components/teacher/TeacherDashboard';
 import { ResponsiveDeviceBar } from '@/frontend/components/ResponsiveDeviceBar';
+import { OnboardingTutorial } from '@/frontend/components/OnboardingTutorial';
 
 export default function Page() {
   const { user, isAuthenticated, isTeacher } = useAuth();
@@ -20,6 +21,7 @@ export default function Page() {
 
   const [studentTab, setStudentTab] = useState<'inicio' | 'grupo' | 'missoes' | 'impacto'>('inicio');
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  const [showTutorial, setShowTutorial] = useState<boolean>(false);
   const [impactTriggered, setImpactTriggered] = useState<boolean>(false);
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
   const [pointsNotification, setPointsNotification] = useState<{ points: number; isHolder: boolean } | null>(null);
@@ -67,6 +69,23 @@ export default function Page() {
       loadAppData();
     }
   }, [isAuthenticated, user?.id, studentTab]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+    const key = `kodic_tutorial_seen_${isTeacher ? 'teacher' : 'student'}`;
+    try {
+      if (!localStorage.getItem(key)) {
+        setShowTutorial(true);
+      }
+    } catch {}
+  }, [isAuthenticated, user?.id, isTeacher]);
+
+  const handleCloseTutorial = () => {
+    setShowTutorial(false);
+    try {
+      localStorage.setItem(`kodic_tutorial_seen_${isTeacher ? 'teacher' : 'student'}`, '1');
+    } catch {}
+  };
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -130,7 +149,12 @@ export default function Page() {
               <Header
                 onOpenDrawer={() => setIsDrawerOpen(true)}
                 onSelectTab={(tab) => setStudentTab(tab as any)}
+                onOpenTutorial={() => setShowTutorial(true)}
               />
+
+              {showTutorial && (
+                <OnboardingTutorial isTeacher={isTeacher} onClose={handleCloseTutorial} />
+              )}
 
               {pointsNotification && (
                 <div className="absolute top-16 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none animate-in fade-in slide-in-from-top-2 duration-200">
@@ -198,7 +222,9 @@ export default function Page() {
                         quizzes={quizzes}
                         quizStats={quizStats}
                         sharedGroup={sharedGroup}
+                        notebooks={notebooks}
                         onGoToHome={() => setStudentTab('inicio')}
+                        onDataChange={loadAppData}
                       />
                     )}
                     {studentTab === 'impacto' && (

@@ -78,7 +78,7 @@ export function StudentMissions({
             missionsSubTab === 'quizzes' ? `${t.card} shadow-sm ${t.textMain}` : t.textMuted
           }`}
         >
-          Quizzes da Turma
+          Quizzes
         </button>
       </div>
 

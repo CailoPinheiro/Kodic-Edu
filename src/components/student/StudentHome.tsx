@@ -96,7 +96,7 @@ export function StudentHome({
             {progressPct}% Atingido
           </span>
         </div>
-        <h2 className={`${t.textMain} font-bold text-lg mb-1`}>Meta Coletiva da Turma</h2>
+        <h2 className={`${t.textMain} font-bold text-lg mb-1`}>Meta Coletiva</h2>
         <p className={`${t.textMuted} text-xs mb-4`}>
           Pontuação Acumulada: <span className="font-bold text-violet-500">{currentPoints.toLocaleString()}</span> / {goalPoints.toLocaleString()} pts
         </p>

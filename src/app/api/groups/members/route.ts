@@ -18,6 +18,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Grupo não encontrado' }, { status: 404 });
   }
 
+  const currentMembers = db.prepare('SELECT id FROM group_members WHERE group_id = ?').all(targetGroupId);
+  if (currentMembers.length >= 4) {
+    return NextResponse.json({
+      error: 'A mesa já atingiu a capacidade máxima de 4 alunos.'
+    }, { status: 400 });
+  }
+
   let targetUserId = userId ? Number(userId) : null;
 
   if (!targetUserId && name && name.trim()) {
@@ -112,7 +119,7 @@ export async function DELETE(request: NextRequest) {
 
   const members = db.prepare('SELECT user_id FROM group_members WHERE group_id = ? ORDER BY id ASC').all(targetGroupId) as any[];
 
-  if (members.length <= 1) {
+  if (authUser.role !== 'teacher' && members.length <= 1) {
     return NextResponse.json({
       error: 'A mesa compartilhada precisa manter pelo menos 1 estudante ativo no aparelho.'
     }, { status: 400 });
@@ -123,10 +130,8 @@ export async function DELETE(request: NextRequest) {
 
   if (group && group.current_device_holder_id === targetUserId) {
     const nextMember = members.find((m) => m.user_id !== targetUserId);
-    if (nextMember) {
-      newHolderId = nextMember.user_id;
-      db.prepare('UPDATE groups SET current_device_holder_id = ? WHERE id = ?').run(newHolderId, targetGroupId);
-    }
+    newHolderId = nextMember ? nextMember.user_id : null;
+    db.prepare('UPDATE groups SET current_device_holder_id = ? WHERE id = ?').run(newHolderId, targetGroupId);
   }
 
   db.prepare('DELETE FROM group_members WHERE group_id = ? AND user_id = ?').run(targetGroupId, targetUserId);

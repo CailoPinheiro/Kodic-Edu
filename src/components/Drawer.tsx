@@ -74,10 +74,9 @@ export function Drawer({ isOpen, onClose }: DrawerProps) {
             </div>
             <div>
               <h2 className={`${t.textMain} font-bold text-lg leading-snug`}>{user.name}</h2>
-              <p className={`${t.textMuted} text-xs`}>{user.grade || '1º Ano A - Ensino Médio'}</p>
               {isLeader && (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 inline-block bg-violet-500/20 text-violet-600 dark:text-violet-300">
-                  Líder de Turma (Moderação Ativa)
+                  Líder (Moderação Ativa)
                 </span>
               )}
             </div>

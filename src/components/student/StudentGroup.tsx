@@ -51,6 +51,7 @@ export function StudentGroup({ sharedGroup, notebooks, onDataChange }: StudentGr
 
   const availableStudents: any[] = sharedGroup?.availableStudents || [];
   const isCurrentUserInGroup = members.some((m) => m.userId === user?.id);
+  const isTableFull = members.length >= 4;
   const currentHolder = members.find((m) => m.isCurrentDeviceHolder) || members[0];
 
   const handleRotateDevice = async (targetUserId?: number) => {
@@ -80,6 +81,11 @@ export function StudentGroup({ sharedGroup, notebooks, onDataChange }: StudentGr
 
   const handleAddMember = async (userId?: number, name?: string, role?: string) => {
     if (isSubmittingAdd || !sharedGroup) return;
+    if (isTableFull) {
+      setActionError('A mesa já atingiu a capacidade máxima de 4 alunos. Um colega precisa sair para outro entrar.');
+      setIsAddModalOpen(false);
+      return;
+    }
     setIsSubmittingAdd(true);
     setActionError(null);
     try {
@@ -183,7 +189,7 @@ export function StudentGroup({ sharedGroup, notebooks, onDataChange }: StudentGr
             hubTab === 'turma' ? `${t.card} shadow-sm ${t.textMain}` : t.textMuted
           }`}
         >
-          Espaço da Turma
+          Mesa de Estudos
         </button>
         <button
           onClick={() => setHubTab('escola')}
@@ -467,7 +473,7 @@ export function StudentGroup({ sharedGroup, notebooks, onDataChange }: StudentGr
           </div>
           <h3 className={`${t.textMain} font-bold text-base`}>Hub da Escola (Global)</h3>
           <p className={`${t.textMuted} text-xs max-w-xs mx-auto leading-relaxed`}>
-            Espaço assíncrono para compartilhamento de curadorias entre séries. Materiais validados pela coordenação estarão disponíveis aqui.
+            Espaço assíncrono para compartilhamento de curadorias escolares. Materiais validados pela coordenação estarão disponíveis aqui.
           </p>
         </div>
       )}
@@ -496,7 +502,7 @@ export function StudentGroup({ sharedGroup, notebooks, onDataChange }: StudentGr
             {availableStudents.length > 0 && (
               <div className="space-y-2">
                 <p className={`${t.textMuted} text-[10px] uppercase font-bold tracking-wider`}>
-                  Colegas da Turma Disponíveis:
+                  Colegas Disponíveis:
                 </p>
                 <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
                   {availableStudents.map((s: any) => (
@@ -522,7 +528,7 @@ export function StudentGroup({ sharedGroup, notebooks, onDataChange }: StudentGr
                         disabled={isSubmittingAdd}
                         className="px-2.5 py-1 rounded-lg bg-fuchsia-500 hover:bg-fuchsia-600 text-white text-[10px] font-bold shadow-xs transition-all flex items-center gap-1 flex-shrink-0"
                       >
-                        <UserPlus className="w-3 h-3" />
+                        <UserPlus className="w-3.5 h-3.5" />
                         <span>Entrar</span>
                       </button>
                     </div>

@@ -51,7 +51,71 @@ async function runTests() {
   const sharedGroupData = await sharedGroupRes.json();
   assert.ok(sharedGroupData.group);
   assert.strictEqual(sharedGroupData.group.members.length, 4);
-  console.log('✓ 4-in-1 shared group fetched');
+  console.log('✓ Shared device group fetched (4 members)');
+
+  const overflowRes = await fetch(`${BASE_URL}/api/groups/members`, {
+    method: 'POST',
+    headers: { ...studentHeaders, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      groupId: sharedGroupData.group.id,
+      name: 'Aluno Excedente',
+      role: 'Curador'
+    })
+  });
+  assert.strictEqual(overflowRes.status, 400);
+  console.log('✓ Max 4 students limit enforced on add');
+
+  const memberToLeave = sharedGroupData.group.members[3];
+  const removeRes = await fetch(`${BASE_URL}/api/groups/members?groupId=${sharedGroupData.group.id}&userId=${memberToLeave.userId}`, {
+    method: 'DELETE',
+    headers: studentHeaders
+  });
+  assert.strictEqual(removeRes.status, 200);
+  console.log('✓ Member left table to make space');
+
+  const addMemberRes = await fetch(`${BASE_URL}/api/groups/members`, {
+    method: 'POST',
+    headers: { ...studentHeaders, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      groupId: sharedGroupData.group.id,
+      name: 'Aluno Teste Dinamico',
+      role: 'Revisor'
+    })
+  });
+  assert.strictEqual(addMemberRes.status, 201);
+  const addMemberData = await addMemberRes.json();
+  assert.ok(addMemberData.member.userId);
+  console.log('✓ Dynamic member enter shared group passed');
+
+  const handoffRes = await fetch(`${BASE_URL}/api/groups/rotate-device`, {
+    method: 'POST',
+    headers: { ...studentHeaders, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      groupId: sharedGroupData.group.id,
+      targetUserId: addMemberData.member.userId
+    })
+  });
+  assert.strictEqual(handoffRes.status, 200);
+  const handoffData = await handoffRes.json();
+  assert.strictEqual(handoffData.currentDeviceHolderId, addMemberData.member.userId);
+  console.log('✓ Direct device handoff passed');
+
+  const cleanRemoveRes = await fetch(`${BASE_URL}/api/groups/members?groupId=${sharedGroupData.group.id}&userId=${addMemberData.member.userId}`, {
+    method: 'DELETE',
+    headers: studentHeaders
+  });
+  assert.strictEqual(cleanRemoveRes.status, 200);
+
+  await fetch(`${BASE_URL}/api/groups/members`, {
+    method: 'POST',
+    headers: { ...studentHeaders, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      groupId: sharedGroupData.group.id,
+      userId: memberToLeave.userId,
+      role: memberToLeave.role
+    })
+  });
+  console.log('✓ Dynamic member leave shared group passed');
 
   const rotateRes = await fetch(`${BASE_URL}/api/groups/rotate-device`, {
     method: 'POST',
@@ -62,6 +126,65 @@ async function runTests() {
   const rotateData = await rotateRes.json();
   assert.ok(rotateData.currentDeviceHolderName);
   console.log('✓ Rotate device passed');
+
+  const teacherGroupsRes = await fetch(`${BASE_URL}/api/groups?classId=${classData.class.id}`, { headers: teacherHeaders });
+  assert.strictEqual(teacherGroupsRes.status, 200);
+  const teacherGroupsData = await teacherGroupsRes.json();
+  assert.ok(Array.isArray(teacherGroupsData.groups));
+  assert.ok(teacherGroupsData.totalGroups >= 1);
+  assert.ok(Array.isArray(teacherGroupsData.enrolledStudents));
+  console.log('✓ Teacher view of groups and roster passed');
+
+  const createGroupRes = await fetch(`${BASE_URL}/api/groups`, {
+    method: 'POST',
+    headers: { ...teacherHeaders, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      classId: classData.class.id,
+      name: 'Mesa 3 - Teste Automatizado Docente',
+      groupType: 'Oficial da Disciplina',
+      objective: 'Validação de criação dinâmica de grupo pelo professor',
+      memberIds: [2, 3]
+    })
+  });
+  assert.strictEqual(createGroupRes.status, 201);
+  const createGroupData = await createGroupRes.json();
+  assert.strictEqual(createGroupData.group.name, 'Mesa 3 - Teste Automatizado Docente');
+  assert.strictEqual(createGroupData.group.members.length, 2);
+  const createdTestGroupId = createGroupData.group.id;
+  console.log('✓ Teacher create group on the fly passed');
+
+  const editGroupRes = await fetch(`${BASE_URL}/api/groups`, {
+    method: 'PATCH',
+    headers: { ...teacherHeaders, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      groupId: createdTestGroupId,
+      name: 'Mesa 3 - Nome Alterado na Hora',
+      objective: 'Objetivo pedagógico alterado na hora'
+    })
+  });
+  assert.strictEqual(editGroupRes.status, 200);
+  const editGroupData = await editGroupRes.json();
+  assert.strictEqual(editGroupData.group.name, 'Mesa 3 - Nome Alterado na Hora');
+  console.log('✓ Teacher alter group on the fly passed');
+
+  const addStudentToTestGroupRes = await fetch(`${BASE_URL}/api/groups/members`, {
+    method: 'POST',
+    headers: { ...teacherHeaders, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      groupId: createdTestGroupId,
+      userId: 4,
+      role: 'Revisor'
+    })
+  });
+  assert.strictEqual(addStudentToTestGroupRes.status, 201);
+  console.log('✓ Teacher add student to group on the fly passed');
+
+  const deleteTestGroupRes = await fetch(`${BASE_URL}/api/groups?groupId=${createdTestGroupId}`, {
+    method: 'DELETE',
+    headers: teacherHeaders
+  });
+  assert.strictEqual(deleteTestGroupRes.status, 200);
+  console.log('✓ Teacher delete group on the fly passed');
 
   const quizzesRes = await fetch(`${BASE_URL}/api/quizzes`, { headers: studentHeaders });
   assert.strictEqual(quizzesRes.status, 200);

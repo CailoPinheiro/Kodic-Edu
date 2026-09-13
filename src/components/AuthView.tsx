@@ -114,15 +114,6 @@ export function AuthView() {
           className={`w-full p-4 rounded-2xl ${t.card} ${t.textMain} text-sm focus:outline-none border focus:border-fuchsia-500 transition-colors`}
         />
 
-        {isRegisterMode && loginType === 'student' && (
-          <input
-            type="text"
-            placeholder="Série / Turma (Ex: 1º Ano A)"
-            value={grade}
-            onChange={(e) => setGrade(e.target.value)}
-            className={`w-full p-4 rounded-2xl ${t.card} ${t.textMain} text-sm focus:outline-none border focus:border-fuchsia-500 transition-colors`}
-          />
-        )}
 
         <button
           type="submit"

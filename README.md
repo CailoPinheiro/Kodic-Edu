@@ -63,7 +63,6 @@ Em cima dessa base, o app soma outras camadas de uso consciente: papéis colabor
 
 ---
 
-![alt text](image.png)
 
 ## Screenshots
 
@@ -120,7 +119,7 @@ Em cima dessa base, o app soma outras camadas de uso consciente: papéis colabor
 
 <!-- Link do vídeo de demo, ex: [Assista no YouTube](https://youtu.be/SEU_LINK_AQUI) -->
 
-_Vídeo em breve._
+Disponível aqui: (https://youtu.be/UmBe-IQ8nM0?si=wP5RbcO6LYBCikNc)
 
 ---
 

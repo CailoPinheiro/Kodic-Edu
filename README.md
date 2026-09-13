@@ -91,6 +91,8 @@ Em cima dessa base, o app soma outras camadas de uso consciente: papéis colabor
 
   <img src="./docs/screenshots/student-quests-2.png" width="300" alt="Tela de missões 2" />
 
+  <img src="./docs/screenshots/student-quests-hub.png" width="300" alt="Tela de missões 2" />
+
   <img src="./docs/screenshots/student-impact.png" width="300" alt="Tela de impacto" />
 
 </p>
@@ -103,6 +105,8 @@ Em cima dessa base, o app soma outras camadas de uso consciente: papéis colabor
   <img src="./docs/screenshots/teacher-general.png" width="300" alt="Tela de Inicio" />
 
 <img src="./docs/screenshots/teacher-groups.png" width="300" alt="Tela de Grupo" />
+
+<img src="./docs/screenshots/teacher-groups-2.png" width="300" alt="Tela de Grupo" />
 
   <img src="./docs/screenshots/teacher-assignment.png" width="300" alt="Tela de missões" />
 

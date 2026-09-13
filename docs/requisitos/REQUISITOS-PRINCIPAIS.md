@@ -14,7 +14,7 @@ O pitch do Kodic Edu se sustenta em duas pernas. Se qualquer uma delas não func
 |----|-----------|------------------------|--------|
 | RF-11 | Um dispositivo representa um grupo de 2 a 4 alunos. | É a premissa central do produto. Sem grupo de verdade, não existe "modo compartilhado" para mostrar. | 🟢 REAL |
 | RF-12 | Pontuação distribuída igualmente para todos os membros do grupo, não só um total do grupo. | É a prova concreta de que ninguém fica de fora por não ter celular, o argumento social mais forte do projeto. Se existisse só "pontuação do grupo" sem refletir no perfil de cada aluno, o pitch de inclusão ficaria só no discurso. | 🟢 REAL |
-| RF-14 | Ao acertar uma questão, o ponto é somado a todos os membros simultaneamente. | É o mecanismo que sustenta o RF-12. | 🟢 REAL |
+| RF-14 | Ao acertar uma questão, a pontuação base é distribuída simultaneamente a todos os membros do grupo, somada a um bônus para o detentor atual do aparelho. | É o mecanismo que sustenta o RF-12. | 🟢 REAL |
 | RF-13 | Botão "Girar Posse" alterna visualmente quem está segurando o celular (Rodízio Atual). | Mesmo sendo apenas UI (não trava input de ninguém), é a prova visual em tela de que o app existe para ser passado de mão em mão. Precisa estar clicável e visível na demo. | 🟢 REAL |
 | N/A | Sincronização em tempo real entre dispositivos físicos diferentes (Supabase Realtime/Firebase). | É o truque de demonstração: abrir em 2 celulares, um grupo acerta, o outro aparelho atualiza sozinho. Sem isso ao vivo, não há como provar "colaboração real". | 🟡 MOCK |
 

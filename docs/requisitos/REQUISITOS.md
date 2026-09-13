@@ -47,7 +47,7 @@ Regra geral: só é **REAL** o que sustenta o "uau" central da demo (professor g
 | RF-11 | Um dispositivo representa um grupo de 2 a 4 alunos (Modo Compartilhado). | 🟢 REAL |
 | RF-12 | Cada membro do grupo tem pontuação individual, sincronizada em tempo real junto com a do grupo ("Sincronização Justa de Pontos"). | 🟢 REAL |
 | RF-13 | Botão "Girar Posse" alterna qual membro é o "Rodízio Atual" (indicativo apenas, não bloqueia interação de ninguém); o estado é persistido de verdade no banco (`groups.current_device_holder_id`, rota `POST /api/groups/rotate-device`). | 🟢 REAL |
-| RF-14 | Ao acertar uma questão, todos os membros do grupo recebem o ponto simultaneamente (incremento igual para todos). | 🟢 REAL |
+| RF-14 | Ao acertar uma questão, todos os membros do grupo recebem os pontos base simultaneamente, com um bônus adicional (+10 pts) concedido ao membro que está atualmente na posse do dispositivo ("Rodízio Atual"). | 🟢 REAL |
 
 ### E. Aluno: Quiz e Progresso
 

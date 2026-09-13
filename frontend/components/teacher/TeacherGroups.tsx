@@ -16,7 +16,8 @@ import {
   X,
   RefreshCw,
   Sparkles,
-  BookOpen
+  BookOpen,
+  Crown
 } from 'lucide-react';
 import { useTheme } from '@/frontend/context/ThemeContext';
 
@@ -30,6 +31,7 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
 
   const [groups, setGroups] = useState<any[]>([]);
   const [enrolledStudents, setEnrolledStudents] = useState<any[]>([]);
+  const [leaderOverrides, setLeaderOverrides] = useState<Record<number, boolean>>({});
   const [allocatedCount, setAllocatedCount] = useState<number>(0);
   const [unallocatedCount, setUnallocatedCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -638,6 +640,7 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
         <div className="space-y-2">
           {filteredStudents.map((student) => {
             const hasGroup = student.isInGroup;
+            const isLeader = leaderOverrides[student.userId] ?? Boolean(student.isLeader);
 
             return (
               <div
@@ -649,12 +652,29 @@ export function TeacherGroups({ currentClass, onDataChange }: TeacherGroupsProps
                     {(student.name || 'A').trim().charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className={`${t.textMain} text-[11px] font-bold truncate`}>{student.name}</p>
+                    <p className={`${t.textMain} text-[11px] font-bold truncate flex items-center gap-1`}>
+                      {student.name}
+                      {isLeader && <Crown className="w-3 h-3 text-amber-500 fill-amber-500 shrink-0" />}
+                    </p>
                     <span className="text-[9px] text-violet-500 font-semibold">{student.role} • {student.points} pts</span>
                   </div>
                 </div>
 
-                <div className="shrink-0 text-right">
+                <div className="shrink-0 flex items-center gap-1.5">
+                  <button
+                    onClick={() =>
+                      setLeaderOverrides((prev) => ({ ...prev, [student.userId]: !isLeader }))
+                    }
+                    title={isLeader ? 'Remover liderança de turma' : 'Tornar Líder de Turma'}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-all shrink-0 ${
+                      isLeader
+                        ? 'bg-amber-500/15 text-amber-500'
+                        : `${t.cardSub} ${t.textMuted} hover:text-amber-500`
+                    }`}
+                  >
+                    <Crown className={`w-3 h-3 ${isLeader ? 'fill-amber-500' : ''}`} />
+                  </button>
+
                   {hasGroup ? (
                     <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-300 block truncate max-w-[120px]">
                       {student.assignedGroups[0]?.groupName || 'Em Mesa'}

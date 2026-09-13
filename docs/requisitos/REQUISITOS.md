@@ -75,6 +75,7 @@ Regra geral: só é **REAL** o que sustenta o "uau" central da demo (professor g
 | RF-22 | "Modo Foco (Pomodoro 25 min)": timer real client-side de contagem regressiva. Sem integração real com notificações do sistema operacional. | 🟢 REAL (simples) |
 | RF-23 | Texto fixo de "Privacy by Design & LGPD" no menu lateral. | 🟡 MOCK |
 | RF-24 | Aba "Impacto Silencioso": lista de notificações privadas, 100% pré-cadastrada via seed (`gratitude_notifications`). Responder um quiz certo não dispara nenhuma notificação nova, e o "agradecer" do Hub (RF-34) também não alimenta essa lista: são duas pontas mockadas ainda desconectadas uma da outra. | 🟡 MOCK |
+| RF-35 | Professor pode tornar um aluno Líder de Turma direto na lista de alunos (`TeacherGroups.tsx`, ícone de coroa). Só muda um estado local do componente; não existe `UPDATE` em `users.is_leader` no backend, então a mudança não persiste (recarregar a página volta pro estado original) e não afeta de verdade a permissão de aprovar moderação, que continua lendo o `is_leader` real do banco. | 🟡 MOCK |
 
 ### H. Governança
 

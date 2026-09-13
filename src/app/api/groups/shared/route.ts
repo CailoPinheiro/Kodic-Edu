@@ -71,6 +71,16 @@ export async function GET(request: NextRequest) {
 
   const currentHolder = formattedMembers.find((m) => m.userId === group.current_device_holder_id) || formattedMembers[0];
 
+  const availableStudents = db.prepare(`
+    SELECT u.id as user_id, u.name, u.email, u.avatar_url, u.grade, u.intelligence_role as role, u.points
+    FROM users u
+    JOIN class_enrollments ce ON ce.student_id = u.id
+    WHERE ce.class_id = ? AND u.id NOT IN (
+      SELECT user_id FROM group_members WHERE group_id = ?
+    )
+    ORDER BY u.name ASC
+  `).all(group.class_id, group.id) as any[];
+
   return NextResponse.json({
     group: {
       id: group.id,
@@ -80,7 +90,16 @@ export async function GET(request: NextRequest) {
       status: group.status,
       currentDeviceHolder: currentHolder ? currentHolder.name : 'Vez de Aluno',
       currentDeviceHolderId: group.current_device_holder_id,
-      members: formattedMembers
+      members: formattedMembers,
+      availableStudents: availableStudents.map((s) => ({
+        id: `usr_${s.user_id}`,
+        userId: s.user_id,
+        name: s.name,
+        email: s.email,
+        role: s.role || 'Curador',
+        avatar: s.avatar_url,
+        points: s.points
+      }))
     }
   });
 }

@@ -4,6 +4,64 @@ import db from './db';
 let isSeeded = false;
 
 export function ensureSeeded(): void {
+  const checkEnzo = db.prepare('SELECT id FROM users WHERE email = ?').get('enzo@kodic.edu');
+  if (!checkEnzo) {
+    const defaultPasswordHash = bcrypt.hashSync('senha123', 10);
+    const insertUser = db.prepare(`
+      INSERT OR IGNORE INTO users (name, email, password_hash, role, grade, intelligence_role, is_leader, points, avatar_url, badges_json, lgpd_consent)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+    `);
+
+    insertUser.run(
+      'Enzo Ribeiro',
+      'enzo@kodic.edu',
+      defaultPasswordHash,
+      'student',
+      '1º Ano A — Ensino Médio',
+      'Curador',
+      0,
+      390,
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+      JSON.stringify([{ id: 'b6', title: 'Explorador Ágil', desc: 'Inovação e Curiosidade', icon: 'zap', color: 'var(--kodic-blue)' }])
+    );
+
+    insertUser.run(
+      'Fernanda Lima',
+      'fernanda@kodic.edu',
+      defaultPasswordHash,
+      'student',
+      '1º Ano A — Ensino Médio',
+      'Revisor',
+      0,
+      410,
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+      JSON.stringify([{ id: 'b7', title: 'Olhar Crítico', desc: 'Atenção aos Detalhes', icon: 'shield-check', color: 'var(--kodic-amber)' }])
+    );
+
+    insertUser.run(
+      'Gabriel Souza',
+      'gabriel@kodic.edu',
+      defaultPasswordHash,
+      'student',
+      '1º Ano A — Ensino Médio',
+      'Comunicador',
+      0,
+      370,
+      'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80',
+      JSON.stringify([{ id: 'b8', title: 'Articulador', desc: 'Engajamento e Síntese', icon: 'mic', color: 'var(--kodic-pink)' }])
+    );
+
+    const classId = (db.prepare('SELECT id FROM classes WHERE code = ?').get('GEO-2026') as any)?.id;
+    if (classId) {
+      const insertEnrollment = db.prepare('INSERT OR IGNORE INTO class_enrollments (class_id, student_id) VALUES (?, ?)');
+      const getUserId = db.prepare('SELECT id FROM users WHERE email = ?');
+      ['enzo@kodic.edu', 'fernanda@kodic.edu', 'gabriel@kodic.edu'].forEach((email) => {
+        const u = getUserId.get(email) as any;
+        if (u) insertEnrollment.run(classId, u.id);
+      });
+    }
+  }
+
   if (isSeeded) return;
 
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get('professora@kodic.edu');

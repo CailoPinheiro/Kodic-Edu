@@ -19,14 +19,14 @@
 
 O Kodic Edu responde ponto a ponto:
 
-| Exigência do desafio | Resposta do Kodic Edu |
-|---|---|
-| Uso pedagógico, reduzindo distração e fortalecendo o foco | Modo Foco/Pomodoro, quiz curricular no lugar de uso livre do aparelho |
-| Autonomia dos estudantes | Papéis colaborativos por escolha (Curador / Revisor / Comunicador), sem exposição forçada |
-| Mediação dos educadores | Assistente BNCC, Painel do Professor, Heatmap, moderação em camadas |
-| Sem ampliar a vigilância | Gratidão Silenciosa (sem métricas públicas), heatmap calculado a partir de respostas de quiz, não de monitoramento de tela |
-| Sem ampliar a desigualdade | Modo Compartilhado: um celular por grupo, pontuação distribuída igualmente |
-| Sem ampliar a sobrecarga das escolas | Assistente de quiz ancorado na BNCC, moderação em camadas |
+| Exigência do desafio                                      | Resposta do Kodic Edu                                                                                                      |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Uso pedagógico, reduzindo distração e fortalecendo o foco | Modo Foco/Pomodoro, quiz curricular no lugar de uso livre do aparelho                                                      |
+| Autonomia dos estudantes                                  | Papéis colaborativos por escolha (Curador / Revisor / Comunicador), sem exposição forçada                                  |
+| Mediação dos educadores                                   | Assistente BNCC, Painel do Professor, Heatmap, moderação em camadas                                                        |
+| Sem ampliar a vigilância                                  | Gratidão Silenciosa (sem métricas públicas), heatmap calculado a partir de respostas de quiz, não de monitoramento de tela |
+| Sem ampliar a desigualdade                                | Modo Compartilhado: um celular por grupo, pontuação distribuída igualmente                                                 |
+| Sem ampliar a sobrecarga das escolas                      | Assistente de quiz ancorado na BNCC, moderação em camadas                                                                  |
 
 ## O Problema
 
@@ -63,39 +63,72 @@ Em cima dessa base, o app soma outras camadas de uso consciente: papéis colabor
 
 ---
 
+![alt text](image.png)
+
 ## Screenshots
 
-<!--
-Sugestão de prints (substituir os caminhos abaixo pelos arquivos reais,
-ex: em docs/screenshots/*.png, depois trocar o src de cada img):
+### Tela Inicial
 
 <p align="center">
-  <img src="./docs/screenshots/login.png" width="200" alt="Tela de login" />
-  <img src="./docs/screenshots/home-aluno.png" width="200" alt="Home do aluno - Modo Compartilhado" />
-  <img src="./docs/screenshots/painel-professor.png" width="200" alt="Painel do Professor" />
-  <img src="./docs/screenshots/heatmap.png" width="200" alt="Heatmap de aprendizagem" />
-</p>
--->
+  <img src="./docs/screenshots/login.png" width="300" alt="Tela de Login" />
 
-*Prints em breve.*
+  <img src="./docs/screenshots/student-register.png" width="300" alt="Tela de registro estudante" />
+
+<img src="./docs/screenshots/teacher-register.png" width="300" alt="Tela de Grupo" />
+
+</p>
+
+### Visão do Aluno
+
+<p align="center">
+  <img src="./docs/screenshots/student-menu-identity.png" width="300" alt="Tela de Menu e identidade" />
+
+  <img src="./docs/screenshots/student-menu.png" width="300" alt="Tela de Inicio" />
+
+<img src="./docs/screenshots/student-group.png" width="300" alt="Tela de Grupo" />
+
+  <img src="./docs/screenshots/student-quests.png" width="300" alt="Tela de missões" />
+
+  <img src="./docs/screenshots/student-quests-2.png" width="300" alt="Tela de missões 2" />
+
+  <img src="./docs/screenshots/student-impact.png" width="300" alt="Tela de impacto" />
+
+</p>
+
+### Visão do Docente
+
+<p align="center">
+  <img src="./docs/screenshots/teacher-menu.png" width="300" alt="Tela de Menu e identidade" />
+
+  <img src="./docs/screenshots/teacher-general.png" width="300" alt="Tela de Inicio" />
+
+<img src="./docs/screenshots/teacher-groups.png" width="300" alt="Tela de Grupo" />
+
+  <img src="./docs/screenshots/teacher-assignment.png" width="300" alt="Tela de missões" />
+
+  <img src="./docs/screenshots/teacher-map.png" width="300" alt="Tela de missões 2" />
+
+  <img src="./docs/screenshots/teacher-mod.png" width="300" alt="Tela de impacto" />
+
+</p>
 
 ## Demonstração
 
 <!-- Link do vídeo de demo, ex: [Assista no YouTube](https://youtu.be/SEU_LINK_AQUI) -->
 
-*Vídeo em breve.*
+_Vídeo em breve._
 
 ---
 
 ## Stack Tecnológica
 
-| Camada | Tecnologia |
-|---|---|
-| **Front-end** | Next.js 14 (App Router) + React 18 + TypeScript + Tailwind CSS + Lucide Icons |
-| **Back-end** | Next.js Route Handlers (`/api/*`), no mesmo processo do front-end |
-| **Banco de Dados** | SQLite (`better-sqlite3`), modo WAL, chaves estrangeiras |
-| **Autenticação** | JWT assinado + `bcryptjs`, RBAC (Professor / Aluno) |
-| **Conformidade** | Privacy by Design, alinhado à LGPD |
+| Camada             | Tecnologia                                                                    |
+| ------------------ | ----------------------------------------------------------------------------- |
+| **Front-end**      | Next.js 14 (App Router) + React 18 + TypeScript + Tailwind CSS + Lucide Icons |
+| **Back-end**       | Next.js Route Handlers (`/api/*`), no mesmo processo do front-end             |
+| **Banco de Dados** | SQLite (`better-sqlite3`), modo WAL, chaves estrangeiras                      |
+| **Autenticação**   | JWT assinado + `bcryptjs`, RBAC (Professor / Aluno)                           |
+| **Conformidade**   | Privacy by Design, alinhado à LGPD                                            |
 
 > **Sobre a escolha da stack:** SQLite local, autenticação simplificada e sincronização por polling foram decisões pragmáticas para as 48h de hackathon, não a visão final do produto. O Kodic Edu é pensado como um app a ser desenvolvido de verdade, e essas escolhas devem ser revistas (banco relacional gerenciado, sincronização em tempo real via Supabase/Firebase, governança institucional por escola) em oportunidades futuras de aprofundamento. Ver o roadmap em [`docs/requisitos/REQUISITOS.md`](./docs/requisitos/REQUISITOS.md).
 
@@ -200,6 +233,7 @@ Copie a URL pública HTTPS gerada pelo ngrok (ex: `https://xxxx.ngrok-free.app`)
 ## Testes Automatizados
 
 O projeto possui uma suíte de testes de integração ponta a ponta que valida:
+
 - Health check da API
 - Quick-login de Estudante e Professora
 - Consulta de turmas e metas coletivas
@@ -221,13 +255,13 @@ npm test
 
 O banco SQLite é populado automaticamente na primeira execução com dados pedagógicos:
 
-| Papel | E-mail | Senha | Detalhes |
-|---|---|---|---|
-| **Professora** | `professora@kodic.edu` | `senha123` | Profª. Cláudia Mendes (Geografia & História) |
-| **Aluno (Líder / Curador)** | `alex@kodic.edu` | `senha123` | Alex Silva (Dono do aparelho no rodízio 4-em-1) |
-| **Aluna (Revisor)** | `bia@kodic.edu` | `senha123` | Bia Santos |
-| **Aluna (Comunicador)** | `carla@kodic.edu` | `senha123` | Carla Dias |
-| **Aluno (Curador)** | `diego@kodic.edu` | `senha123` | Diego Alves |
+| Papel                       | E-mail                 | Senha      | Detalhes                                        |
+| --------------------------- | ---------------------- | ---------- | ----------------------------------------------- |
+| **Professora**              | `professora@kodic.edu` | `senha123` | Profª. Cláudia Mendes (Geografia & História)    |
+| **Aluno (Líder / Curador)** | `alex@kodic.edu`       | `senha123` | Alex Silva (Dono do aparelho no rodízio 4-em-1) |
+| **Aluna (Revisor)**         | `bia@kodic.edu`        | `senha123` | Bia Santos                                      |
+| **Aluna (Comunicador)**     | `carla@kodic.edu`      | `senha123` | Carla Dias                                      |
+| **Aluno (Curador)**         | `diego@kodic.edu`      | `senha123` | Diego Alves                                     |
 
 > 💡 **Dica:** Na tela de autenticação, você também pode clicar nos botões de **"Acesso Rápido de Demonstração (1 Clique)"** para alternar instantaneamente entre a Professora e o Aluno sem precisar digitar senhas.
 
